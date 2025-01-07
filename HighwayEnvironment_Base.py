@@ -7,6 +7,9 @@ import highway_env
 import numpy as np
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
+import requests
+import subprocess
+import os
 
 
 save_base_path = "base"
@@ -123,12 +126,72 @@ if __name__ == '__main__':
         crashes = 0
         test_runs = 10
 
+        ############## SAFETY CONTROLLER ##############
+        # Get the virtual IP dinamically if running on wsl, use localhost instead
+        if "WSL_INTEROP" in os.environ:
+            result = subprocess.run(
+                ["ip", "route"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            '''
+            Example of ip route command on WSL:
+                default via 172.25.16.1 dev eth0 proto kernel
+                172.25.16.0/20 dev eth0 proto kernel scope link src 172.25.31.78
+            '''
+            for line in result.stdout.splitlines():
+                if "default" in line:
+                    ip = line.split()[2]
+                    break
+        else:
+            ip = "localhost"
+        local_domain = f"http://{ip}:8080/"  
+        # Upload the model and the library (if required)
+        path = "upload-model"
+        asm_path = "SafetyController.asm"
+        with open(asm_path, 'rb') as file:
+            files = {'file': file}
+            response = requests.post(url=local_domain+path, files=files)
+        path = "model-list"
+        response = requests.get(url=local_domain+path)
+        if ('StandardLibrary' not in response.json()['libraries']):
+            path = "upload-library"
+            stdl_path = "StandardLibrary.asm"
+            with open(stdl_path, 'rb') as file:
+                files = {'file': file}
+                response = requests.post(url=local_domain+path, files=files)
+        ###############################################
+
         for _ in range(test_runs):
+            ############## SAFETY CONTROLLER ##############
+            # Start a new execution of the asm
+            path = "start"
+            response = requests.post(url=local_domain+path, params="name="+asm_path)
+            exec_id = response.json()['id']
+            ###############################################
             state = env.reset()[0]
             done = False
             truncated = False
             while not done and not truncated:
                 action = model.predict(state, deterministic=True)[0]
+                ############## SAFETY CONTROLLER ##############
+                # Perform a step and read the action
+                path = "step"
+                json_data = {
+                    "id": exec_id,
+                    "monitoredVariables": {
+                        "inputAction": str(action)
+                    }
+                }
+                response = requests.put(url=local_domain+path, json=json_data)
+                #sameAction = int(response.json()['runOutput']['controlledvalues']['sameAction'])
+                randomAction = int(response.json()['runOutput']['controlledvalues']['randomAction'])
+                actions_description = highway_env.envs.common.action.DiscreteMetaAction.ACTIONS_ALL
+                print(f"\nAction: {action} ({actions_description[int(action)]})")
+                print(f"After Safety Enforcement: {randomAction} ({actions_description[randomAction]})")
+                action = randomAction
+                ###############################################
                 next_state, reward, done, truncated, info = env.step(action)
                 state = next_state
                 env.render()
@@ -138,8 +201,17 @@ if __name__ == '__main__':
 
                 if info and info['crashed']:
                     crashes += 1
-
+            ############## SAFETY CONTROLLER ##############
+            # Stop the execution
+            path = "stop-model"
+            response = requests.delete(url=local_domain+path, params="id="+str(exec_id))
+            ###############################################
         print("\rCrashes:", crashes, "/", test_runs, "runs", f"({crashes/test_runs*100:0.1f} %)")
+        ############## SAFETY CONTROLLER ##############
+        # Delete the model
+        path = "delete-model"
+        response = requests.delete(url=local_domain+path, params="name="+asm_path)
+        ###############################################
         env.close()
     else:
         display_script_help()
