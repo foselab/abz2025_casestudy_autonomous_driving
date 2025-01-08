@@ -127,6 +127,7 @@ if __name__ == '__main__':
         test_runs = 10
 
         ############## SAFETY CONTROLLER ##############
+        np.set_printoptions(precision=2, suppress=True)
         # Get the virtual IP dinamically if running on wsl, use localhost instead
         if "WSL_INTEROP" in os.environ:
             result = subprocess.run(
@@ -176,6 +177,18 @@ if __name__ == '__main__':
             while not done and not truncated:
                 action = model.predict(state, deterministic=True)[0]
                 ############## SAFETY CONTROLLER ##############
+                print("\n","-"*30)
+                # Read the observations (just print for now)
+                '''
+                                    Presence    x      y       vx      vy
+                ------------------------------------------------------------
+                ControlledVehicle     1.0       0.89    0.50    0.31    0.0
+                Vehicle_2             1.0       0.09   -0.50   -0.04    0.0
+                Vehicle_3             1.0       0.21    0.00   -0.02    0.0
+                Vehicle_4             1.0       0.33    0.00   -0.04    0.0
+                Vehicle_5             1.0       0.43   -0.25   -0.04    0.0
+                '''
+                print("Observations:\n",state)
                 # Perform a step and read the action
                 path = "step"
                 json_data = {
@@ -188,7 +201,7 @@ if __name__ == '__main__':
                 #sameAction = int(response.json()['runOutput']['controlledvalues']['sameAction'])
                 randomAction = int(response.json()['runOutput']['controlledvalues']['randomAction'])
                 actions_description = highway_env.envs.common.action.DiscreteMetaAction.ACTIONS_ALL
-                print(f"\nAction: {action} ({actions_description[int(action)]})")
+                print(f"Action: {action} ({actions_description[int(action)]})")
                 print(f"After Safety Enforcement: {randomAction} ({actions_description[randomAction]})")
                 action = randomAction
                 ###############################################
@@ -197,7 +210,7 @@ if __name__ == '__main__':
                 env.render()
 
                 action_counter[action] += 1
-                print('\r', action_counter, end='')  # Verify multiple actions are taken
+                print('\rAction counter: ', action_counter, end='')  # Verify multiple actions are taken
 
                 if info and info['crashed']:
                     crashes += 1
