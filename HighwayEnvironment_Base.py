@@ -156,7 +156,7 @@ if __name__ == '__main__':
             response = requests.post(url=local_domain+path, files=files)
         path = "model-list"
         response = requests.get(url=local_domain+path)
-        if ('StandardLibrary' not in response.json()['libraries']):
+        if ('StandardLibrary.asm' not in response.json()['libraries']):
             path = "upload-library"
             stdl_path = "StandardLibrary.asm"
             with open(stdl_path, 'rb') as file:
