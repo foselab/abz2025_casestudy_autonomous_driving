@@ -10,6 +10,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 import requests
 import subprocess
 import os
+import time
 
 
 save_base_path = "base"
@@ -137,7 +138,7 @@ if __name__ == '__main__':
                 check=True,
             )
             '''
-            Example of ip route command on WSL:
+            Example of 'ip route' command on WSL:
                 default via 172.25.16.1 dev eth0 proto kernel
                 172.25.16.0/20 dev eth0 proto kernel scope link src 172.25.31.78
             '''
@@ -162,6 +163,8 @@ if __name__ == '__main__':
             with open(stdl_path, 'rb') as file:
                 files = {'file': file}
                 response = requests.post(url=local_domain+path, files=files)
+        # Maximum delay introduced by a rest call to /step
+        max_delay = 0
         ###############################################
 
         for _ in range(test_runs):
@@ -197,7 +200,11 @@ if __name__ == '__main__':
                         "inputAction": str(action)
                     }
                 }
+                start_time = time.perf_counter()
                 response = requests.put(url=local_domain+path, json=json_data)
+                delay = (time.perf_counter() - start_time) * 1000
+                max_delay = max(max_delay, delay)
+                print(f"Safety Controller delay: {delay:.2f} milliseconds")
                 #sameAction = int(response.json()['runOutput']['controlledvalues']['sameAction'])
                 randomAction = int(response.json()['runOutput']['controlledvalues']['randomAction'])
                 actions_description = highway_env.envs.common.action.DiscreteMetaAction.ACTIONS_ALL
@@ -215,12 +222,14 @@ if __name__ == '__main__':
                 if info and info['crashed']:
                     crashes += 1
             ############## SAFETY CONTROLLER ##############
+            print("\n","-"*30)
             # Stop the execution
             path = "stop-model"
             response = requests.delete(url=local_domain+path, params="id="+str(exec_id))
             ###############################################
         print("\rCrashes:", crashes, "/", test_runs, "runs", f"({crashes/test_runs*100:0.1f} %)")
         ############## SAFETY CONTROLLER ##############
+        print(f"Safety Controller maximum delay: {max_delay:.2f} milliseconds")
         # Delete the model
         path = "delete-model"
         response = requests.delete(url=local_domain+path, params="name="+asm_path)
