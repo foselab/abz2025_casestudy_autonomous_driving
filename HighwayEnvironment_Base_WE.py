@@ -8,6 +8,7 @@ import numpy as np
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
 
+import Enforcer
 
 save_base_path = "base"
 
@@ -123,23 +124,64 @@ if __name__ == '__main__':
         crashes = 0
         test_runs = 10
 
+        ############## SAFETY CONTROLLER ##############
+        safety_enforcer = Enforcer.Enforcer()
+        safety_enforcer.upload_runtime_model()
+        ###############################################
+
         for _ in range(test_runs):
+            env.reset()
+            road = env.road
+            from highway_env.vehicle.kinematics import Vehicle
+
+            # Define the position and lane for the new vehicle
+            ego_vehicle = env.vehicle
+            lane = road.network.get_closest_lane_index(ego_vehicle.position)
+            position = [ego_vehicle.position[0] - 20, ego_vehicle.position[1]]  # 20m behind the ego
+            new_vehicle = Vehicle(road, position, speed=20)  # Speed set to 20 m/s
+
+            road.vehicles.append(new_vehicle)
+            env.render()
+            
+            ############## SAFETY CONTROLLER ##############
+            safety_enforcer.begin_enforcement()
+            ###############################################
+
             state = env.reset()[0]
             done = False
             truncated = False
             while not done and not truncated:
                 action = model.predict(state, deterministic=True)[0]
+
+                ############## SAFETY CONTROLLER ##############
+                action = safety_enforcer.sanitise_output(action)
+                ###############################################
+
                 next_state, reward, done, truncated, info = env.step(action)
+
+                ############## SAFETY CONTROLLER ##############
+                safety_enforcer.log_step_info(next_state, info)
+                ###############################################
+
                 state = next_state
                 env.render()
 
                 action_counter[action] += 1
-                print('\r', action_counter, end='')  # Verify multiple actions are taken
+                print('\rAction counter: ', action_counter, end='')  # Verify multiple actions are taken
 
                 if info and info['crashed']:
                     crashes += 1
+                    
+            ############## SAFETY CONTROLLER ##############
+            safety_enforcer.end_enforcement()
+            ###############################################
 
         print("\rCrashes:", crashes, "/", test_runs, "runs", f"({crashes/test_runs*100:0.1f} %)")
+        
+        ############## SAFETY CONTROLLER ##############
+        safety_enforcer.delete_runtime_model()
+        ###############################################
+
         env.close()
     else:
         display_script_help()

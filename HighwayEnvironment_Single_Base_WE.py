@@ -8,20 +8,21 @@ import numpy as np
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import CheckpointCallback
 
+import Enforcer
 
-save_base_path = "base"
+save_base_path = "single_base"
 
 # Configuration (default values in parenthesis)
 env = gym.make("highway-fast-v0", render_mode='human')
 env.configure({
+    "lanes_count": 1,  # (4)
+    "collision_reward": -1,
+    "right_lane_reward": 0.0, # (0.1),
+    "reward_speed_range": [0,40],
+    "high_speed_reward": 1,
     "action": {
         "type": "DiscreteMetaAction",
-        "target_speeds": [0,5,10,15,20,25,30,35,40]},
-    "lanes_count": 3,  # (4)
-    "collision_reward": -1, # (-1)
-    "right_lane_reward": 0.1, # (0.1),
-    "reward_speed_range": [0, 40],
-    "high_speed_reward": 1,
+        "target_speeds": [0,5,10,15,20,25,30,35,40]}
 })
 # env.configure({
 #     "lanes_count": 3,  # (4)
@@ -121,15 +122,35 @@ if __name__ == '__main__':
 
         action_counter = [0]*5  # It seems model only takes one action; check this
         crashes = 0
-        test_runs = 10
+        test_runs = 100
+
+        ############## SAFETY CONTROLLER ##############
+        safety_enforcer = Enforcer.Enforcer()
+        safety_enforcer.upload_runtime_model()
+        ###############################################
 
         for _ in range(test_runs):
+            
+            ############## SAFETY CONTROLLER ##############
+            safety_enforcer.begin_enforcement()
+            ###############################################
+
             state = env.reset()[0]
             done = False
             truncated = False
             while not done and not truncated:
                 action = model.predict(state, deterministic=True)[0]
+
+                ############## SAFETY CONTROLLER ##############
+                action = safety_enforcer.sanitise_output(action)
+                ###############################################
+
                 next_state, reward, done, truncated, info = env.step(action)
+
+                ############## SAFETY CONTROLLER ##############
+                safety_enforcer.log_step_info(next_state, info)
+                ###############################################   
+
                 state = next_state
                 env.render()
 
@@ -138,8 +159,17 @@ if __name__ == '__main__':
 
                 if info and info['crashed']:
                     crashes += 1
+            
+            ############## SAFETY CONTROLLER ##############
+            safety_enforcer.end_enforcement()
+            ###############################################
 
         print("\rCrashes:", crashes, "/", test_runs, "runs", f"({crashes/test_runs*100:0.1f} %)")
+        
+        ############## SAFETY CONTROLLER ##############
+        safety_enforcer.delete_runtime_model()
+        ###############################################
+        
         env.close()
     else:
         display_script_help()
