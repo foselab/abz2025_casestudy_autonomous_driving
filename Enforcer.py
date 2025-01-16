@@ -3,11 +3,13 @@ import requests
 import subprocess
 import time
 import logging
+from datetime import datetime
 import numpy
 from highway_env.envs.common.action import DiscreteMetaAction
 
 class Enforcer:
-    LOG_FILE = "enforcer.log"
+    LOG_FOLDER = "log"
+    LOG_FILE = f"{LOG_FOLDER}/enforcer_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     LOG_LEVEL = logging.INFO
     BASE_PORT = 8080
     DEFAULT_BASE_FILE_PATH = "."
@@ -36,6 +38,7 @@ class Enforcer:
         """
         Configure the logging.
         """
+        os.makedirs(self.LOG_FOLDER, exist_ok=True)
         logging.basicConfig(
             level=self.LOG_LEVEL,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -208,19 +211,19 @@ class Enforcer:
         x_ego, vx_ego = self._extract_ego(next_state)
         if x_rear == float('-inf'):
             x_rear = vx_rear = "N/A"
-        if x_front == float('-inf'):
+        if x_front == float('inf'):
             x_front = vx_front = "N/A"
         speed = info.get("speed", "N/A")
         crashed = info.get("crashed", "N/A")
         rewards = info.get("rewards", "N/A")
-        logging.info("Next state (observations):\n %s", next_state)
-        logging.info("Other vehicles information:")
-        logging.info("*Rear vehicle x: %s, vx: %s", x_rear, vx_rear)
-        logging.info("*Front vehicle x: %s, vx: %s", x_front, vx_front)
+        logging.info("Observations:\n %s", next_state)
         logging.info("Ego vehicle information:")
         logging.info("*Ego vehicle x: %s, vx: %s", x_ego, vx_ego)
         logging.info("*Speed: %s", speed)
         logging.info("*Crashed: %s", crashed)
         logging.info("*Reward: %s", reward)
         logging.info("*Rewards: %s", rewards)
-        logging.info("-"*30)
+        logging.info("Other vehicles information:")
+        logging.info("*Rear vehicle x: %s, vx: %s", x_rear, vx_rear)
+        logging.info("*Front vehicle x: %s, vx: %s", x_front, vx_front)
+
