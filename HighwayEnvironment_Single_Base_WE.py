@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
         action_counter = [0]*5  # It seems model only takes one action; check this
         crashes = 0
-        test_runs = 100
+        test_runs = 10
 
         ############## SAFETY CONTROLLER ##############
         safety_enforcer = Enforcer.Enforcer()
@@ -148,7 +148,7 @@ if __name__ == '__main__':
                 next_state, reward, done, truncated, info = env.step(action)
 
                 ############## SAFETY CONTROLLER ##############
-                safety_enforcer.log_step_info(next_state, info)
+                safety_enforcer.log_step_info(next_state, reward, info)
                 ###############################################   
 
                 state = next_state

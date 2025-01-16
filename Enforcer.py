@@ -168,11 +168,27 @@ class Enforcer:
             logging.error("ASM step execution failed: %s", e)
             raise
 
-    def log_step_info(self, next_state, info):
+    def _extract_rear_and_front(self, observations):
+        x_rear = float('-inf')
+        vx_rear = None
+        x_front = float('inf')
+        vx_front = None
+        for observation in observations[1:]:
+            x = observation[1]
+            vx = observation[3]
+            if x < 0 and x > x_rear:
+                x_rear, vx_rear = x, vx
+            elif x > 0 and x < x_front:
+                x_front, vx_front = x, vx
+        return x_rear, vx_rear, x_front, vx_front 
+    
+    def _extract_ego(self, observations):
+        return observations[0][1], observations[0][3] 
+
+    def log_step_info(self, next_state, reward, info):
         """
         Log info about a step on the environment.
         """
-        logging.info("Next state (observation):\n %s", next_state)
         '''
                             Presence    x      y       vx      vy
         ------------------------------------------------------------
@@ -188,11 +204,23 @@ class Enforcer:
         [ 1.    0.33    0.00   -0.04  0.  ]
         [ 1.    0.43   -0.25   -0.04  0.  ]]
         '''
+        x_rear, vx_rear, x_front, vx_front = self._extract_rear_and_front(next_state)
+        x_ego, vx_ego = self._extract_ego(next_state)
+        if x_rear == float('-inf'):
+            x_rear = vx_rear = "N/A"
+        if x_front == float('-inf'):
+            x_front = vx_front = "N/A"
         speed = info.get("speed", "N/A")
         crashed = info.get("crashed", "N/A")
         rewards = info.get("rewards", "N/A")
-        logging.info("Information:")
+        logging.info("Next state (observations):\n %s", next_state)
+        logging.info("Other vehicles information:")
+        logging.info("*Rear vehicle x: %s, vx: %s", x_rear, vx_rear)
+        logging.info("*Front vehicle x: %s, vx: %s", x_front, vx_front)
+        logging.info("Ego vehicle information:")
+        logging.info("*Ego vehicle x: %s, vx: %s", x_ego, vx_ego)
         logging.info("*Speed: %s", speed)
         logging.info("*Crashed: %s", crashed)
+        logging.info("*Reward: %s", reward)
         logging.info("*Rewards: %s", rewards)
         logging.info("-"*30)

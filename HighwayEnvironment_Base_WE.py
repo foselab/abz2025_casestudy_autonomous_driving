@@ -130,19 +130,7 @@ if __name__ == '__main__':
         ###############################################
 
         for _ in range(test_runs):
-            env.reset()
-            road = env.road
-            from highway_env.vehicle.kinematics import Vehicle
 
-            # Define the position and lane for the new vehicle
-            ego_vehicle = env.vehicle
-            lane = road.network.get_closest_lane_index(ego_vehicle.position)
-            position = [ego_vehicle.position[0] - 20, ego_vehicle.position[1]]  # 20m behind the ego
-            new_vehicle = Vehicle(road, position, speed=20)  # Speed set to 20 m/s
-
-            road.vehicles.append(new_vehicle)
-            env.render()
-            
             ############## SAFETY CONTROLLER ##############
             safety_enforcer.begin_enforcement()
             ###############################################
@@ -160,7 +148,7 @@ if __name__ == '__main__':
                 next_state, reward, done, truncated, info = env.step(action)
 
                 ############## SAFETY CONTROLLER ##############
-                safety_enforcer.log_step_info(next_state, info)
+                safety_enforcer.log_step_info(next_state, reward, info)
                 ###############################################
 
                 state = next_state
