@@ -75,9 +75,6 @@ definitions:
 			r_Hold[]
 			r_unsafeDistance[]
 			r_goFast[]
-			/*if isUndef(outAction) then
-				outAction := inputAction
-			endif*/
 		endpar
 	
 
