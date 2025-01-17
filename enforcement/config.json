@@ -1,0 +1,17 @@
+{
+    "enforcement": true,
+    "single_lane": true,
+    "adversarial": true,
+    "simulation": {
+      "test_runs": 10,
+      "simulation_frequency": 15,
+      "policy_frequency": 1,
+      "duration": 30},
+    "enforcer":{
+      "base_port": 8080,
+      "spec_path": "../asmeta spec",
+      "runtime_model": "SafetyEnforcer.asm"},
+    "logging":{
+      "level": "INFO",
+      "target_folder": "log"}
+}

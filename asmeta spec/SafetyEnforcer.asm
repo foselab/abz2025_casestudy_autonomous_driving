@@ -3,7 +3,7 @@
 
 asm SafetyEnforcer
 
-import StandardLibrary
+import ../libraries/StandardLibrary
 
 signature:
 	enum domain Actions={FASTER, SLOWER, IDLE, LANE_LEFT, LANE_RIGHT}
