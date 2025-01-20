@@ -46,7 +46,7 @@ class Enforcer:
                         return f"http://{line.split()[2]}:{self.base_port}/"
             except subprocess.SubprocessError as e:
                 self.logger.error("Failed to determine WSL IP: %s", e)
-        return f"http://localhost:{self.BASE_PORT}/"
+        return f"http://localhost:{self.base_port}/"
 
     def _send_request(self, method, endpoint, **kwargs):
         """
@@ -135,15 +135,16 @@ class Enforcer:
                 "x_front": x_front,
                 "v_front": v_front},
         }
-        start_time = time.perf_counter()
         try:
+            start_time = time.perf_counter()
             response = self._send_request("PUT", endpoint, json=json_data)
             delay = (time.perf_counter() - start_time) * 1000
-            self.max_enforcement_delay = max(self.max_enforcement_delay, delay)
-            enforced_action = response.json()["runOutput"]["outvalues"]["outAction"]
             self.logger.info("ASM step performed for ID %s with delay %i ms", self.exec_id, delay)
-            # TODO: controllo se enforced_action è Undef
-            actions_description = DiscreteMetaAction.ACTIONS_ALL
+            self.max_enforcement_delay = max(self.max_enforcement_delay, delay)
+            if not response.json()["runOutput"]["outvalues"]: # out values empty
+                return None
+            enforced_action = response.json()["runOutput"]["outvalues"]["outAction"]
+            self.logger.info("Enforcer applied")
             self.logger.info(f"Input Action: {input_action}")
             self.logger.info(f"After Safety Enforcement: {enforced_action}")
             return enforced_action

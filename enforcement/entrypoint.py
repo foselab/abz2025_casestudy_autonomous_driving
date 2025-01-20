@@ -1,29 +1,39 @@
 import os
+import sys
 
 import logging_manager
 import configuration_manager
-import agent
+import test_runner
 import enforcer
 
-cm = configuration_manager.ConfigurationManager("config.json")
+CONFIG_FILE = "config.json"
 
-level, log_folder = cm.get_logging_params()
+run_enforcer = True if (len(sys.argv) == 2 and sys.argv[1] == "run_enforcer") else False
+
+# Setup Configuration Manager
+config_manager = configuration_manager.ConfigurationManager(CONFIG_FILE)
+
+# Setup Logging
+level, log_folder = config_manager.get_logging_params()
 logging_manager.setup_logging(level, log_folder)
 logger = logging_manager.get_logger(__name__)
 
 logger.info("Loaded config.json - Starting execution")
 
-test_runs = cm.get_test_runs()
-
-folder = ("single_" if cm.is_single_lane() else "") + cm.get_policy()
+# Obtain the path of the trained model
+folder = ("single_" if config_manager.is_single_lane() else "") + config_manager.get_policy()
 model_path = os.path.join("..", folder, "new", "trained_model")
 
-env = cm.configure_env()
-if (cm.run_enforcer()):
-    port, asm_path, asm_file_name = cm.get_enforcer_params()
+# Configura the Environment (HighwayEnv)
+env = config_manager.configure_env()
+
+# Run the tests
+test_runs = config_manager.get_test_runs()
+if (run_enforcer):
+    port, asm_path, asm_file_name = config_manager.get_enforcer_params()
     enf = enforcer.Enforcer(port, asm_path, asm_file_name)
-    agent.test(model_path, env, enf, test_runs)
+    test_runner.test(model_path, env, enf, test_runs, config_manager.get_policy_frequency())
     delay = enf.get_maximum_delay()
     logger.info("Maximum delay introduced by the enforcer: %i ms", delay)
 else:
-    agent.test(model_path, env, None, test_runs)
+    test_runner.test(model_path, env, None, test_runs, config_manager.get_policy_frequency())
