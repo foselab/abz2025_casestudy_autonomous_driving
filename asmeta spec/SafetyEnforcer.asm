@@ -17,6 +17,7 @@ signature:
 	//monitored le osservazioni per le regole di enforcement? 
 	
 	out outAction: Actions
+	out currentAgentAction: Actions
 	
 	controlled a_max: Real //Maximum acceleration of rear vehicle before breaking: m/s^2
 	controlled b_min: Real 
@@ -47,32 +48,27 @@ definitions:
 					outAction := $a
 	
 	// Keep current speed - no risk of collision	
-	macro rule r_Hold = 
+	/*macro rule r_Hold = 
 		if ((x_front-x_self)>dRSS(v_self,v_front) and (x_front-x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then 
-			if (inputAction != IDLE) then
-				outAction := IDLE
-			endif
-		endif
+			outAction := IDLE
+		endif*/
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
 		if ((x_front-x_self)<=dRSS(v_self,v_front)) then 
-			if (inputAction != SLOWER) then
-				outAction := SLOWER
-			endif
+			outAction := SLOWER
 		endif
 	
 	// Rear vehicle very far: increase speed	
 	macro rule r_goFast = 
 		if ((x_front-x_self)>(dRSS(v_self,v_front)*gofast_perc)) then 
-			if (inputAction != FASTER) then
-				outAction := FASTER
-			endif
+			outAction := FASTER
 		endif
 		
 	main rule r_Main =
 		par
-			r_Hold[]
+			currentAgentAction := inputAction
+			//r_Hold[]
 			r_unsafeDistance[]
 			r_goFast[]
 		endpar
