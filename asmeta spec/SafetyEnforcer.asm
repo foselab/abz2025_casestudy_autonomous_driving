@@ -47,11 +47,12 @@ definitions:
 				do
 					outAction := $a
 	
-	// Keep current speed - no risk of collision	
-	/*macro rule r_Hold = 
+	// Keep the same action decided by the agent - no risk of collision	
+	macro rule r_Same = 
 		if ((x_front-x_self)>dRSS(v_self,v_front) and (x_front-x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then 
-			outAction := IDLE
-		endif*/
+		//if ((x_front-x_self)>dRSS(v_self,v_front)) then // use this condition if r_goFast[] is commented in the main rule
+			outAction := inputAction
+		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
@@ -68,7 +69,7 @@ definitions:
 	main rule r_Main =
 		par
 			currentAgentAction := inputAction
-			//r_Hold[]
+			r_Same[]
 			r_unsafeDistance[]
 			r_goFast[]
 		endpar

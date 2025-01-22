@@ -133,7 +133,7 @@ class Enforcer:
                 "x_self": x_self,
                 "v_self": v_self,
                 "x_front": x_front,
-                "v_front": v_front},
+                "v_front": v_front}
         }
         try:
             start_time = time.perf_counter()
@@ -141,10 +141,17 @@ class Enforcer:
             delay = (time.perf_counter() - start_time) * 1000
             self.logger.info("ASM step performed for ID %s with delay %i ms", self.exec_id, delay)
             self.max_enforcement_delay = max(self.max_enforcement_delay, delay)
-            if not response.json()["runOutput"]["outvalues"]: # out values empty
+            if not response.json()["runOutput"]["outvalues"]: # outAction not set (should never happen)
+                self.logger.error("The Enforcer returned no outAction but should always return it")
+                self.logger.info(f"Input Action: {input_action}")
                 return None
             enforced_action = response.json()["runOutput"]["outvalues"]["outAction"]
-            self.logger.info("Enforcer applied")
+            if enforced_action == input_action:
+                self.logger.info("Enforcer not applied - keeping input action")
+                self.logger.info(f"Input Action: {input_action}")
+                return None
+            else:
+                self.logger.info("Enforcer applied - changing action")
             self.logger.info(f"Input Action: {input_action}")
             self.logger.info(f"After Safety Enforcement: {enforced_action}")
             return enforced_action
