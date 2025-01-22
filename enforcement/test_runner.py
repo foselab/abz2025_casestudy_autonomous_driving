@@ -1,3 +1,4 @@
+import time
 from stable_baselines3 import DQN
 from highway_env.envs.common.action import DiscreteMetaAction
 
@@ -29,19 +30,27 @@ def test(model_path, env, enforcer, test_runs, policy_frequency):
     crashes = 0
     total_km = 0
     if execute_enforcer:
+        start_time = time.perf_counter()
         enforcer.upload_runtime_model()
+        upload_delay = (time.perf_counter() - start_time) * 1000
 
     for i in range(test_runs):
+        logger.info("--Starting new test run--")
+        test_run_start = time.perf_counter()
         km = 0
         n_step = 0
         if execute_enforcer:
+            sanitisation_delay = 0
             enforcer_interventions = 0 # Number of step in which the enforcer changed the input action to a different action
+            start_time = time.perf_counter()
             enforcer.begin_enforcement()
+            start_delay = (time.perf_counter() - start_time) * 1000
         state = env.reset()[0]
         done = False
         truncated = False
 
         while not done and not truncated:
+            logger.info("--Executing new step--")
             # Use the AI model to predict the next action
             action = model.predict(state, deterministic=True)[0]
             action_descritpion = DiscreteMetaAction.ACTIONS_ALL[int(action)]
@@ -57,7 +66,9 @@ def test(model_path, env, enforcer, test_runs, policy_frequency):
                     logger.info(f"Action: {action_descritpion}")
                 else:
                     # Run the enforcer to sanitise the action predicted by the agent
+                    start_time = time.perf_counter()
                     enforced_action = enforcer.sanitise_output(action_descritpion, x_self, v_self, x_front, v_front)
+                    sanitisation_delay += (time.perf_counter() - start_time) * 1000
                     # Change the action if the enforcer returns a new different one
                     if enforced_action != None: 
                         action = REVERSED_ACTIONS[enforced_action]
@@ -80,15 +91,30 @@ def test(model_path, env, enforcer, test_runs, policy_frequency):
             env.render()
 
         total_km += km
-        logger.info(f"Test run {i} completed: {km:.2f} km traveled")
+
         if execute_enforcer:
-            logger.info(f"The Enforcer changed input action {enforcer_interventions} times out of {n_step} step")
+            start_time = time.perf_counter()
             enforcer.end_enforcement()
+            stop_delay = (time.perf_counter() - start_time) * 1000
+            logger.info("Enforcer delays:")
+            logger.info(f"* Start delay: {start_delay:.2f}ms")
+            logger.info(f"* Total sanitisation delay: {sanitisation_delay:.2f}ms")
+            logger.info(f"* Stop delay: {stop_delay:.2f}ms")
+            logger.info(f"Number of enforcer interventions: {enforcer_interventions} (out of {n_step})")
 
-    logger.info(f"Crashes: {crashes} / {test_runs} runs, ({crashes / test_runs * 100:.2f}%)")
-    logger.info(f"Average distance traveled: {total_km / test_runs:.2f}km")
+        test_run_duration = (time.perf_counter() - test_run_start) * 1000
+        logger.info(f"Test run {i} completed in {test_run_duration:.2f}ms: {km:.2f}km traveled")
+        logger.info("")
 
-    #if execute_enforcer:
-    #    enforcer.delete_runtime_model()
+    logger.info(f"Global metrics on {test_runs} test runs:")
+    logger.info(f"* Crashes: {crashes} / {test_runs} runs, ({crashes / test_runs * 100:.2f}%)")
+    logger.info(f"* Average distance traveled: {total_km / test_runs:.2f}km")
+
+    if execute_enforcer:
+        start_time = time.perf_counter()
+        enforcer.delete_runtime_model()
+        delete_delay = (time.perf_counter() - start_time) * 1000
+        logger.info(f"Upload model delay: {upload_delay:.2f}ms")
+        logger.info(f"Delete model delay: {delete_delay:.2f}ms")
 
     env.close()

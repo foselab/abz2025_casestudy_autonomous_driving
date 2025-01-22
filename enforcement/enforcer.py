@@ -19,7 +19,6 @@ class Enforcer:
         self.base_port = base_port
         self.api_base_url = self._resolve_api_endpoint()
         self.exec_id = None
-        self.max_enforcement_delay = 0
         self.logger.info("Enforcer initialized with domain: %s", self.api_base_url)
         self.logger.info("Runtime model: %s", self.asm_name)
         self.logger.info("")
@@ -140,9 +139,8 @@ class Enforcer:
             response = self._send_request("PUT", endpoint, json=json_data)
             delay = (time.perf_counter() - start_time) * 1000
             self.logger.info("ASM step performed for ID %s with delay %i ms", self.exec_id, delay)
-            self.max_enforcement_delay = max(self.max_enforcement_delay, delay)
             if not response.json()["runOutput"]["outvalues"]: # outAction not set (should never happen)
-                self.logger.error("The Enforcer returned no outAction but should always return it")
+                self.logger.error("The Enforcer returned no outAction but should always return something")
                 self.logger.info(f"Input Action: {input_action}")
                 return None
             enforced_action = response.json()["runOutput"]["outvalues"]["outAction"]
@@ -158,6 +156,3 @@ class Enforcer:
         except Exception as e:
             self.logger.error("ASM step execution failed: %s", e)
             raise
-
-    def get_maximum_delay(self):
-        return self.max_enforcement_delay

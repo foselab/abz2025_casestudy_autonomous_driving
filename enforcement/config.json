@@ -2,9 +2,9 @@
   "single_lane": true,
   "adversarial": false,
   "simulation": {
-    "test_runs": 2,
+    "test_runs": 1,
     "simulation_frequency": 15,
-    "policy_frequency": 2,
+    "policy_frequency": 1,
     "duration": 100},
   "enforcer":{
     "base_port": 8080,

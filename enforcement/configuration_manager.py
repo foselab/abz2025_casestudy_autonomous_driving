@@ -1,26 +1,28 @@
 import json
 import gymnasium as gym
 
+import logging_manager
+
 class ConfigurationManager:
     def __init__(self, config_file):
+        self.logger = logging_manager.get_logger(__name__)
         with open(config_file) as json_file:
             self.json_data = json.load(json_file)
-            
+
     def configure_env(self):
         """
         Configure and return an HighwayEnv Environment
         """
         env = gym.make("highway-fast-v0", render_mode='human')
-        sim_param = self.json_data["simulation"]
         # Parameters relative to rewards may be useful but are not strictly necessary for the execution of the tests
         env.configure({
             "lanes_count": 1 if self.json_data["single_lane"] else 3,
             "action": {
                 "type": "DiscreteMetaAction",
                 "target_speeds": [0,5,10,15,20,25,30,35,40]},
-            "simulation_frequency": sim_param["simulation_frequency"],
-            "policy_frequency": sim_param["policy_frequency"],
-            "duration": sim_param["duration"],
+            "simulation_frequency": self.get_simulation_frequency(),
+            "policy_frequency": self.get_policy_frequency(),
+            "duration": self.get_duration(),
             "reward_speed_range": [0,40],
             "right_lane_reward": 0.0
         })
@@ -40,6 +42,12 @@ class ConfigurationManager:
     def get_policy_frequency(self):
         return self.json_data["simulation"]["policy_frequency"]
     
+    def get_simulation_frequency(self):
+        return self.json_data["simulation"]["simulation_frequency"]
+    
+    def get_duration(self):
+        return self.json_data["simulation"]["duration"]
+    
     def get_test_runs(self):
         return self.json_data["simulation"]["test_runs"]
 
@@ -56,4 +64,14 @@ class ConfigurationManager:
     def get_logging_params(self):
         log_param = self.json_data["logging"]
         return log_param["level"], log_param["target_folder"]
+    
+    def log_configuration(self):
+        self.logger.info("Configuration: ")
+        self.logger.info("* Policy: " + self.get_policy())
+        self.logger.info("* Lane configuration: " + "single lane" if self.is_single_lane() else "multi lane")
+        self.logger.info("* Runtime ASM model: " + self.json_data["enforcer"]["runtime_model"])
+        self.logger.info("* Number of test runs: " + str(self.get_test_runs()))
+        self.logger.info("* Duration of each test run: " + str(self.get_duration()) + "s")
+        self.logger.info("* Policy frequency: " + str(self.get_policy_frequency()) + "Hz")
+        self.logger.info("* Simulation frequency: " + str(self.get_simulation_frequency()) + "Hz")
     
