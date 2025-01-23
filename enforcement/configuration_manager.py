@@ -27,13 +27,11 @@ class ConfigurationManager:
             "right_lane_reward": 0.0
         })
         if self.json_data["adversarial"]:
-            env.configure({"collision_reward": 1,
-                            "high_speed_reward": 2,})
+            env.configure({"collision_reward": 1,"high_speed_reward": 2})
             if not self.json_data["single_lane"]: # 3 lanes adversarial
                 env.configure({"lane_change_reward": 0.5})
         else:
-            env.configure({"collision_reward": -1,
-                            "high_speed_reward": 1,})
+            env.configure({"collision_reward": -1, "high_speed_reward": 1})
             if not self.json_data["single_lane"]: # 3 lanes base
                 env.configure({"right_lane_reward": 0.1})
         env.reset()
@@ -67,11 +65,11 @@ class ConfigurationManager:
     
     def log_configuration(self):
         self.logger.info("Configuration: ")
-        self.logger.info("* Policy: " + self.get_policy())
-        self.logger.info("* Lane configuration: " + "single lane" if self.is_single_lane() else "multi lane")
-        self.logger.info("* Runtime ASM model: " + self.json_data["enforcer"]["runtime_model"])
-        self.logger.info("* Number of test runs: " + str(self.get_test_runs()))
-        self.logger.info("* Duration of each test run: " + str(self.get_duration()) + "s")
-        self.logger.info("* Policy frequency: " + str(self.get_policy_frequency()) + "Hz")
-        self.logger.info("* Simulation frequency: " + str(self.get_simulation_frequency()) + "Hz")
+        self.logger.info(f"* Policy: {self.get_policy()}")
+        self.logger.info(f"* Lane configuration: {'single lane' if self.is_single_lane() else 'multi lane'}")
+        self.logger.info(f"* Runtime ASM model: {self.json_data['enforcer']['runtime_model']}")
+        self.logger.info(f"* Number of test runs: {self.get_test_runs()}")
+        self.logger.info(f"* Duration of each test run: {self.get_duration()} s")
+        self.logger.info(f"* Policy frequency: {self.get_policy_frequency()} Hz")
+        self.logger.info(f"* Simulation frequency: {self.get_simulation_frequency()} Hz")
     

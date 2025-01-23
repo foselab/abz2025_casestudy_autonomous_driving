@@ -19,8 +19,8 @@ class Enforcer:
         self.base_port = base_port
         self.api_base_url = self._resolve_api_endpoint()
         self.exec_id = None
-        self.logger.info("Enforcer initialized with domain: %s", self.api_base_url)
-        self.logger.info("Runtime model: %s", self.asm_name)
+        self.logger.info(f"Enforcer initialized with domain: {self.api_base_url}")
+        self.logger.info(f"Runtime model: {self.asm_name}")
         self.logger.info("")
 
     def _resolve_api_endpoint(self):
@@ -44,7 +44,7 @@ class Enforcer:
                     if "default" in line:
                         return f"http://{line.split()[2]}:{self.base_port}/"
             except subprocess.SubprocessError as e:
-                self.logger.error("Failed to determine WSL IP: %s", e)
+                self.logger.error(f"Failed to determine WSL IP: {e}")
         return f"http://localhost:{self.base_port}/"
 
     def _send_request(self, method, endpoint, **kwargs):
@@ -57,10 +57,10 @@ class Enforcer:
             response.raise_for_status()
             return response
         except requests.Timeout as e:
-            self.logger.error("HTTP Request timed out: %s", e)
+            self.logger.error(f"HTTP Request timed out: {e}")
             raise
         except requests.RequestException as e:
-            self.logger.error("HTTP Request failed: %s", e)
+            self.logger.error(f"HTTP Request failed: {e}")
             raise
 
     def _upload_file(self, endpoint, file_path):
@@ -70,7 +70,7 @@ class Enforcer:
         with open(file_path, "rb") as file:
             files = {"file": file}
             self._send_request("POST", endpoint, files=files)
-        self.logger.info("Uploaded file: %s", file_path)
+        self.logger.info(f"Uploaded file: {file_path}")
 
     def upload_runtime_model(self):
         """
@@ -83,7 +83,7 @@ class Enforcer:
             if "StandardLibrary.asm" not in libraries:
                 self._upload_file("upload-library", self.stdl_path)
         except Exception as e:
-            self.logger.error("Failed to upload model or library: %s", e)
+            self.logger.error(f"Failed to upload model or library: {e}")
             raise
 
     def delete_runtime_model(self):
@@ -92,9 +92,9 @@ class Enforcer:
         """
         try:
             self._send_request("DELETE", "delete-model", params={"name": self.asm_name})
-            self.logger.info("Model deleted: %s", self.asm_name)
+            self.logger.info(f"Model deleted: {self.asm_name}")
         except Exception as e:
-            self.logger.error("Failed to delete model: %s", e)
+            self.logger.error(f"Failed to delete model: {e}")
             raise
     
     def begin_enforcement(self):
@@ -104,9 +104,9 @@ class Enforcer:
         try:
             response = self._send_request("POST", "start", params={"name": self.asm_name})
             self.exec_id = response.json()["id"]
-            self.logger.info("Execution started with ID: %s", self.exec_id)
+            self.logger.info(f"Execution started with ID: {self.exec_id}")
         except Exception as e:
-            self.logger.error("Failed to start execution: %s", e)
+            self.logger.error(f"Failed to start execution: {e}")
             raise
 
     def end_enforcement(self):
@@ -115,9 +115,9 @@ class Enforcer:
         """
         try:
             self._send_request("DELETE", "stop-model", params={"id": str(self.exec_id)})
-            self.logger.info("Execution stopped for ID: %s", self.exec_id)
+            self.logger.info(f"Execution stopped for ID: {self.exec_id}")
         except Exception as e:
-            self.logger.error("Failed to stop execution: %s", e)
+            self.logger.error(f"Failed to stop execution: {e}")
             raise
 
     def sanitise_output(self, input_action, x_self, v_self, x_front, v_front):
@@ -138,7 +138,7 @@ class Enforcer:
             start_time = time.perf_counter()
             response = self._send_request("PUT", endpoint, json=json_data)
             delay = (time.perf_counter() - start_time) * 1000
-            self.logger.info("ASM step performed for ID %s with delay %i ms", self.exec_id, delay)
+            self.logger.info(f"ASM step performed for ID {self.exec_id} with delay {delay:.2f} ms")
             if not response.json()["runOutput"]["outvalues"]: # outAction not set (should never happen)
                 self.logger.error("The Enforcer returned no outAction but should always return something")
                 self.logger.info(f"Input Action: {input_action}")

@@ -33,6 +33,6 @@ test_runs = config_manager.get_test_runs()
 if (run_enforcer):
     port, asm_path, asm_file_name = config_manager.get_enforcer_params()
     enf = enforcer.Enforcer(port, asm_path, asm_file_name)
-    test_runner.test(model_path, env, enf, test_runs, config_manager.get_policy_frequency())
+    test_runner.test(model_path, env, enf, test_runs)
 else:
-    test_runner.test(model_path, env, None, test_runs, config_manager.get_policy_frequency())
+    test_runner.test(model_path, env, None, test_runs)

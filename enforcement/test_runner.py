@@ -8,7 +8,7 @@ import logging_manager
 logger = logging_manager.get_logger(__name__)
 REVERSED_ACTIONS = {value: key for key, value in DiscreteMetaAction.ACTIONS_ALL.items()}
 
-def test(model_path, env, enforcer, test_runs, policy_frequency):
+def test(model_path, env, enforcer, test_runs):
     """
     Run a series of tests
 
@@ -24,6 +24,7 @@ def test(model_path, env, enforcer, test_runs, policy_frequency):
     """
         
     execute_enforcer = enforcer != None
+    policy_frequency = env.config["policy_frequency"]
 
     model = DQN.load(model_path)
 
@@ -56,8 +57,7 @@ def test(model_path, env, enforcer, test_runs, policy_frequency):
             action_descritpion = DiscreteMetaAction.ACTIONS_ALL[int(action)]
 
             # Read the obesrvation
-            obs_config = env.observation_type
-            x_self, v_self, x_front, v_front = observation_processor.process(obs_config, state)
+            x_self, v_self, x_front, v_front = observation_processor.process(env, state)
 
             if execute_enforcer:
                 # Do not execute the enforcer if there is no front vehicle
@@ -102,8 +102,10 @@ def test(model_path, env, enforcer, test_runs, policy_frequency):
             logger.info(f"* Stop delay: {stop_delay:.2f}ms")
             logger.info(f"Number of enforcer interventions: {enforcer_interventions} (out of {n_step})")
 
-        test_run_duration = (time.perf_counter() - test_run_start) * 1000
-        logger.info(f"Test run {i} completed in {test_run_duration:.2f}ms: {km:.2f}km traveled")
+        test_execution_time = (time.perf_counter() - test_run_start) * 1000
+        effective_duration = int(n_step/policy_frequency)
+        logger.info(f"Effective Duration: {effective_duration} simulation seconds")
+        logger.info(f"Test run {i} completed in {test_execution_time:.2f}ms: {km:.2f}km traveled")
         logger.info("")
 
     logger.info(f"Global metrics on {test_runs} test runs:")
