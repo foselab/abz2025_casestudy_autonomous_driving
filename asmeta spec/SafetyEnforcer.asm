@@ -23,12 +23,15 @@ signature:
 	controlled b_min: Real 
 	controlled b_max: Real
 	controlled resp_time: Real
+	controlled l_vehicle: Real
+	controlled w_vehicle: Real
 	
 	static v_max: Real // m/s
 	
 	static gofast_perc: Real
 	
 	derived dRSS: Prod(Real,Real)-> Real //Safety distance
+	derived actual_distance: Prod(Real,Real)-> Real //Actual distance between two vehicles considering their length
 	
 definitions:
 	
@@ -39,8 +42,9 @@ definitions:
 	(0.5 *a_max * pwr(resp_time,2.0)) + 
 	(pwr(($v_r+resp_time*a_max),2.0)/(2.0*b_min)) - 
 	(pwr($v_f,2.0)/(2.0*b_max))))
-
 	
+	function actual_distance($x_f in Real, $x_s in Real) = $x_f-$x_s-l_vehicle
+
 	
 	macro rule r_randomAction=
 		choose $a in Actions with true
@@ -48,28 +52,29 @@ definitions:
 					outAction := $a
 	
 	// Keep the same action decided by the agent - no risk of collision	
-	macro rule r_Same = 
-		if ((x_front-x_self)>dRSS(v_self,v_front) and (x_front-x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then 
-		//if ((x_front-x_self)>dRSS(v_self,v_front)) then // use this condition if r_goFast[] is commented in the main rule
+	macro rule r_Hold = 
+		if (actual_distance(x_front, x_self)>dRSS(v_self,v_front) and actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then 
+		//if (actual_distance(x_front, x_self)>dRSS(v_self,v_front)) then // use this condition if r_goFast[] is commented in the main rule
+		//if (actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then // use this condition if r_unsafeDistance[] is commented in the main rule
 			outAction := inputAction
 		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if ((x_front-x_self)<=dRSS(v_self,v_front)) then 
+		if (actual_distance(x_front, x_self)<=dRSS(v_self,v_front)) then 
 			outAction := SLOWER
 		endif
 	
 	// Rear vehicle very far: increase speed	
 	macro rule r_goFast = 
-		if ((x_front-x_self)>(dRSS(v_self,v_front)*gofast_perc)) then 
+		if (actual_distance(x_front, x_self)>(dRSS(v_self,v_front)*gofast_perc)) then 
 			outAction := FASTER
 		endif
 		
 	main rule r_Main =
 		par
 			currentAgentAction := inputAction
-			r_Same[]
+			r_Hold[]
 			r_unsafeDistance[]
 			r_goFast[]
 		endpar
@@ -85,5 +90,7 @@ definitions:
    function b_max = 5.0
    function b_min = 3.0
    function resp_time = 1.0
+   function l_vehicle = 5.0
+   function w_vehicle = 2.0
    
    
