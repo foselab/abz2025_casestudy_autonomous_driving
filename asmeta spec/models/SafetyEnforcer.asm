@@ -46,11 +46,6 @@ definitions:
 	function actual_distance($x_f in Real, $x_s in Real) = $x_f-$x_s-l_vehicle
 
 	
-	macro rule r_randomAction=
-		choose $a in Actions with true
-				do
-					outAction := $a
-	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
 		if (actual_distance(x_front, x_self)>dRSS(v_self,v_front) and actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then 
