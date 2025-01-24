@@ -1,0 +1,36 @@
+scenario singleLaneS1
+
+load SafetyEnforcer.asm
+
+//A vehicle approaches another vehicle in the same lane from behind, the distance decreases and safety distance is violated.
+set inputAction := IDLE;
+set x_front := 98; //m
+set x_self := 89; //m
+set v_self := 26.2; // m/s - 94 km/h
+set v_front := 25.4; // m/s - 91 km/h
+/*
+set inputAction := IDLE;
+set x_front := 110; //m
+set x_self := 89; //m
+set v_self := 26.2; // m/s - 94 km/h 
+set v_front := 25.8; // m/s - 91 km/h
+*/
+
+step
+
+//The Ego vehicle brakes.
+check outAction = SLOWER;
+
+set inputAction := SLOWER;
+set x_front := 123.4; //m
+set x_self := 112.7; //m
+set v_self := 21.2; // m/s 
+set v_front := 25.4; // m/s
+
+step
+
+//The Ego vehicle continues braking to maintain the safety distance.
+check outAction = SLOWER;
+
+
+

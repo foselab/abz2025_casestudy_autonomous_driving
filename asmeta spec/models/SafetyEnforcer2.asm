@@ -1,7 +1,7 @@
 //Single lane enforcement model
 // Main assumption: the enforcement is activated if there is a front car within the observable distance (100m)
 
-asm SafetyEnforcer
+asm SafetyEnforcer2
 
 import ../libraries/StandardLibrary
 
@@ -32,7 +32,7 @@ signature:
 	static v_max: Real // m/s
 	
 	static gofast_perc: Real
-	//static dRSS_perc: Real quando frenare prima di violare la safety distance -> dRSS + dRSS_perc%
+	static dRSS_breakdist: Real //quando frenare prima di violare la safety distance -> dRSS + dRSS_perc%
 	
 	derived dRSS: Prod(Real,Real)-> Real //Safety distance
 	derived actual_distance: Prod(Real,Real)-> Real //Actual distance between two vehicles considering their length
@@ -41,6 +41,8 @@ definitions:
 	
 	function v_max = 40.0
 	function gofast_perc = 1.7
+	function dRSS_breakdist = 5.0
+	
 	
 	function dRSS ($v_r in Real, $v_f in Real) = max(0.0, (($v_r*resp_time) + 
 	(0.5 *a_max * pwr(resp_time,2.0)) + 
@@ -60,7 +62,7 @@ definitions:
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance(x_front, x_self)<=dRSS(v_self,v_front)) then 
+		if (actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)+dRSS_breakdist)) then 
 			outAction := SLOWER
 		endif
 	
