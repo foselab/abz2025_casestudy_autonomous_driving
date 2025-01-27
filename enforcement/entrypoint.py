@@ -32,7 +32,7 @@ if write_to_xlsx:
         config_manager.get_policy(),
         "single" if config_manager.is_single_lane() else "multi",
         run_enforcer,
-        "NaN" if not run_enforcer else config_manager.get_enforcer_rules() # There is no check that the actual rules used in the ASM match
+        "NaN" if not run_enforcer else config_manager.get_runtime_model()
     ]
     xlsx_writer = ExcelWriter(config_manager.get_experiments_folder(), config_sub_row)
 

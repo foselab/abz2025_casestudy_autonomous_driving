@@ -20,7 +20,7 @@ class ExcelWriter:
             "policy",
             "lane_configuration",
             "run_enforcer [True/False]",
-            "enforcer_rules",
+            "runtime_model",
             "crash [True/False]",
             "traveled_distance [km]",
             "effective_duration [s simulation time]",

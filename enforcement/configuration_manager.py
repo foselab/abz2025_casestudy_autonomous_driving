@@ -55,6 +55,9 @@ class ConfigurationManager:
     def is_single_lane(self):
         return self.json_data["single_lane"]
     
+    def get_runtime_model(self):
+        return self.json_data["enforcer"]["runtime_model"]
+    
     def get_enforcer_params(self):
         enf_param = self.json_data["enforcer"]
         return enf_param["base_port"], enf_param["spec_path"], enf_param["runtime_model"]
@@ -68,9 +71,6 @@ class ConfigurationManager:
     
     def get_experiments_folder(self):
         return self.json_data["experiments"]["folder"]
-    
-    def get_enforcer_rules(self):
-        return self.json_data["experiments"]["enforcer_rules"]
     
     def log_configuration(self):
         self.logger.info("Configuration: ")
