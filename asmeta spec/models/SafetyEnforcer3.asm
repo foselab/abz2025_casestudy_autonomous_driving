@@ -1,9 +1,8 @@
 //Single lane enforcement model
 // Main assumption: the enforcement is activated if there is a front car within the observable distance (100m)
-// SLOWER action before reaching the safety distance WITH derived function with parameters
+// SLOWER action before reaching the safety distance WITHOUT derived function with parameters
 
-
-asm SafetyEnforcer2
+asm SafetyEnforcer3
 
 import ../libraries/StandardLibrary
 
@@ -36,8 +35,9 @@ signature:
 	static gofast_perc: Real
 	static dRSS_breakdist: Real //quando frenare prima di violare la safety distance -> dRSS + dRSS_perc%
 	
-	derived dRSS: Prod(Real,Real)-> Real //Safety distance
-	derived actual_distance: Prod(Real,Real)-> Real //Actual distance between two vehicles considering their length
+	derived dRSS: Real //Safety distance
+	static dRSS_safe: Real 
+	derived actual_distance: Real //Actual distance between two vehicles considering their length
 	
 definitions:
 	
@@ -45,32 +45,33 @@ definitions:
 	function gofast_perc = 1.7
 	function dRSS_breakdist = 5.0
 	
+	function dRSS_safe = 160.0 // m
 	
-	function dRSS ($v_r in Real, $v_f in Real) = max(0.0, (($v_r*resp_time) + 
-	(0.5 *a_max * pwr(resp_time,2.0)) + 
-	(pwr(($v_r+resp_time*a_max),2.0)/(2.0*b_min)) - 
-	(pwr($v_f,2.0)/(2.0*b_max))))
-	
-	function actual_distance($x_f in Real, $x_s in Real) = $x_f-$x_s-l_vehicle
+	function dRSS = max(0.0, ((v_self*resp_time) + 
+	(0.5 *a_max * (resp_time * resp_time)) + 
+	(((v_self+resp_time*a_max) * (v_self+resp_time*a_max))/(2.0*b_min)) - 
+	((v_front * v_front)/(2.0*b_max))))
+
+	function actual_distance = x_front - x_self - l_vehicle
 
 	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
-		if (actual_distance(x_front, x_self)>(dRSS(v_self,v_front) + dRSS_breakdist) and actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then 
-		//if (actual_distance(x_front, x_self)>dRSS(v_self,v_front)) then // use this condition if r_goFast[] is commented in the main rule
-		//if (actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)*gofast_perc)) then // use this condition if r_unsafeDistance[] is commented in the main rule
+		if (actual_distance>(dRSS + dRSS_breakdist) and actual_distance<=(dRSS*gofast_perc)) then 
+		//if (actual_distance>dRSS) then // use this condition if r_goFast[] is commented in the main rule
+		//if (actual_distance<=(dRSS*gofast_perc)) then // use this condition if r_unsafeDistance[] is commented in the main rule
 			outAction := inputAction
 		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance(x_front, x_self)<=(dRSS(v_self,v_front)+dRSS_breakdist)) then 
+		if (actual_distance<=(dRSS+dRSS_breakdist)) then 
 			outAction := SLOWER
 		endif
 	
 	// Rear vehicle very far: increase speed	
 	macro rule r_goFast = 
-		if (actual_distance(x_front, x_self)>(dRSS(v_self,v_front)*gofast_perc)) then 
+		if (actual_distance>(dRSS*gofast_perc)) then 
 			outAction := FASTER
 		endif
 		
@@ -80,8 +81,8 @@ definitions:
 			r_Hold[]
 			r_unsafeDistance[]
 			r_goFast[]
-			dRSS_contr := dRSS(v_self,v_front)
-			actual_distance_contr := actual_distance(x_front, x_self)
+			dRSS_contr := dRSS
+			actual_distance_contr := actual_distance
 		endpar
 	
 
