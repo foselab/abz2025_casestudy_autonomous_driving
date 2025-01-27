@@ -63,6 +63,15 @@ class ConfigurationManager:
         log_param = self.json_data["logging"]
         return log_param["level"], log_param["target_folder"]
     
+    def write_to_xlsx(self):
+        return self.json_data["experiments"]["write_to_xlsx"]
+    
+    def get_experiments_folder(self):
+        return self.json_data["experiments"]["folder"]
+    
+    def get_enforcer_rules(self):
+        return self.json_data["experiments"]["enforcer_rules"]
+    
     def log_configuration(self):
         self.logger.info("Configuration: ")
         self.logger.info(f"* Policy: {self.get_policy()}")

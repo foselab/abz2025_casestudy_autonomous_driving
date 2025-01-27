@@ -36,7 +36,7 @@ def _denormalize_observation(obs_config, normalized_observation):
 
 def _extract_front(observation):
     """
-    Extract x position and velocity of the vehicle in front of the ego vehicle
+    Extract x position and velocity of the vehicle in front of the ego vehicle for single lane scenario
     """
     x_front = float('inf')
     vx_front = None
@@ -55,7 +55,7 @@ def _extract_self(observation):
 
 def _extract_self_lane(observation):
     """
-    Extract the lane of the ego vehicle (i.e. the controlled vehicle, self)
+    Extract the lane of the ego vehicle (i.e. the controlled vehicle, self), None if it is changing lane
     """
     y = observation[0][2]
     vy = observation[0][4]
@@ -92,7 +92,7 @@ def _process_multi_lane(observation):
     x_self, vx_self = _extract_self(observation)
     x_lane = _extract_self_lane(observation)
     if (x_lane == None):
-        return float(x_self), float(vx_self), 0, 0
+        pass #TODO
     x_left, vx_left = _extract_front_from_lane(observation, "LEFT")
     x_middle, vx_middle = _extract_front_from_lane(observation, "MIDDLE")
     x_right, vx_right = _extract_front_from_lane(observation, "RIGHT")
@@ -100,9 +100,7 @@ def _process_multi_lane(observation):
     logger.info(f"LEFT lane vehicle x: {x_left:.2f}, vx: {vx_left:.2f}")
     logger.info(f"MIDDLE lane vehicle x: {x_middle:.2f}, vx: {vx_middle:.2f}")
     logger.info(f"RIGHT lane vehicle x: {x_right:.2f}, vx: {vx_right:.2f}")
-    if x_middle == float('inf'):
-        return float(x_self), float(vx_self), x_middle, vx_middle
-    return float(x_self), float(vx_self), float(x_middle), float(vx_middle)
+    #TODO
 
 def _process_single_lane(observation):
     """

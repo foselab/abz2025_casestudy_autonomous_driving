@@ -2,13 +2,15 @@ import time
 from stable_baselines3 import DQN
 from highway_env.envs.common.action import DiscreteMetaAction
 
+from enforcer import Enforcer
+from xlsx_writer import ExcelWriter
 import observation_processor
 import logging_manager
 
 logger = logging_manager.get_logger(__name__)
 REVERSED_ACTIONS = {value: key for key, value in DiscreteMetaAction.ACTIONS_ALL.items()}
 
-def test(model_path, env, enforcer, test_runs):
+def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter):
     """
     Run a series of tests
 
@@ -17,19 +19,20 @@ def test(model_path, env, enforcer, test_runs):
         env (gym.Env): The simulation environment in which the model will be tested.
         enforcer (Enforcer or None): An optional enforcement module to validate and correct actions.
         test_runs (int): Number of test episodes to run.
-        policy_frequency (int): The frequency at which the model takes actions (Hz).
+        xlsx_writer (ExcelWriter or None): An optional already initialized xlsx file writer
 
     Returns:
         None
     """
         
     execute_enforcer = enforcer != None
+    write_to_xslx = xlsx_writer != None
     policy_frequency = env.config["policy_frequency"]
 
     model = DQN.load(model_path)
 
     crashes = 0
-    total_km = 0
+    total_traveled_distance = 0
     if execute_enforcer:
         start_time = time.perf_counter()
         enforcer.upload_runtime_model()
@@ -38,10 +41,12 @@ def test(model_path, env, enforcer, test_runs):
     for i in range(test_runs):
         logger.info("--Starting new test run--")
         test_run_start = time.perf_counter()
-        km = 0
+        crash = False
+        traveled_distance = 0
         n_step = 0
         if execute_enforcer:
-            sanitisation_delay = 0
+            total_sanitisation_delay = 0
+            max_sanitisation_delay = 0
             enforcer_interventions = 0 # Number of step in which the enforcer changed the input action to a different action
             start_time = time.perf_counter()
             enforcer.begin_enforcement()
@@ -68,7 +73,9 @@ def test(model_path, env, enforcer, test_runs):
                     # Run the enforcer to sanitise the action predicted by the agent
                     start_time = time.perf_counter()
                     enforced_action = enforcer.sanitise_output(action_descritpion, x_self, v_self, x_front, v_front)
-                    sanitisation_delay += (time.perf_counter() - start_time) * 1000
+                    sanitisation_delay = (time.perf_counter() - start_time) * 1000
+                    max_sanitisation_delay = max(max_sanitisation_delay, sanitisation_delay)
+                    total_sanitisation_delay += sanitisation_delay
                     # Change the action if the enforcer returns a new different one
                     if enforced_action != None: 
                         action = REVERSED_ACTIONS[enforced_action]
@@ -82,15 +89,16 @@ def test(model_path, env, enforcer, test_runs):
             # Compute the metrics
             if info and info['crashed']:
                 crashes += 1
+                crash = True
                 logger.info("Test run terminated - ego vehicle crashed")
-            km += (v_self*(1/policy_frequency))/1000 
+            traveled_distance += (v_self*(1/policy_frequency))/1000 
             n_step += 1
 
             # Update the state (observation) and render the environment for the next step
             state = next_state
             env.render()
 
-        total_km += km
+        total_traveled_distance += traveled_distance
 
         if execute_enforcer:
             start_time = time.perf_counter()
@@ -98,19 +106,33 @@ def test(model_path, env, enforcer, test_runs):
             stop_delay = (time.perf_counter() - start_time) * 1000
             logger.info("Enforcer delays:")
             logger.info(f"* Start delay: {start_delay:.2f}ms")
-            logger.info(f"* Total sanitisation delay: {sanitisation_delay:.2f}ms")
+            logger.info(f"* Total sanitisation delay: {total_sanitisation_delay:.2f}ms (max {max_sanitisation_delay:.2f}ms)")
             logger.info(f"* Stop delay: {stop_delay:.2f}ms")
             logger.info(f"Number of enforcer interventions: {enforcer_interventions} (out of {n_step})")
 
         test_execution_time = (time.perf_counter() - test_run_start) * 1000
         effective_duration = int(n_step/policy_frequency)
         logger.info(f"Effective Duration: {effective_duration} simulation seconds")
-        logger.info(f"Test run {i} completed in {test_execution_time:.2f}ms: {km:.2f}km traveled")
+        logger.info(f"Test run {i} completed in {test_execution_time:.2f}ms: {traveled_distance:.2f}km traveled")
         logger.info("")
+
+        if write_to_xslx:
+            row = [
+                crash,
+                traveled_distance,
+                effective_duration,
+                "NaN" if not execute_enforcer else enforcer_interventions,
+                "NaN" if not execute_enforcer else start_delay,
+                "NaN" if not execute_enforcer else stop_delay,
+                "NaN" if not execute_enforcer else total_sanitisation_delay,
+                "NaN" if not execute_enforcer else max_sanitisation_delay,
+                test_execution_time
+            ]
+            xlsx_writer.add_row(row)
 
     logger.info(f"Global metrics on {test_runs} test runs:")
     logger.info(f"* Crashes: {crashes} / {test_runs} runs, ({crashes / test_runs * 100:.2f}%)")
-    logger.info(f"* Average distance traveled: {total_km / test_runs:.2f}km")
+    logger.info(f"* Average distance traveled: {total_traveled_distance / test_runs:.2f}km")
 
     if execute_enforcer:
         start_time = time.perf_counter()

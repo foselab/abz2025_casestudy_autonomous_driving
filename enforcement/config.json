@@ -2,15 +2,20 @@
   "single_lane": true,
   "adversarial": true,
   "simulation": {
-    "test_runs": 1,
+    "test_runs": 10,
     "simulation_frequency": 15,
     "policy_frequency": 1,
     "duration": 100},
   "enforcer":{
     "base_port": 8080,
     "spec_path": "../asmeta spec/models",
-    "runtime_model": "SafetyEnforcer.asm"},
+    "runtime_model": "SafetyEnforcerNF.asm"},
   "logging":{
     "level": "INFO",
-    "target_folder": "log"}
+    "target_folder": "log"},
+  "experiments": {
+    "write_to_xlsx": false,
+    "folder": "data/raw",
+    "enforcer_rules": "all_rules"
+  }
 }
