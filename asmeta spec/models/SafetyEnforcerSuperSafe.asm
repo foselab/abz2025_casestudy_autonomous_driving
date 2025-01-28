@@ -8,7 +8,7 @@ import ../libraries/StandardLibrary
 import ../libraries/LTLLibrary
 
 signature:
-	enum domain Actions={FASTER, SLOWER, IDLE}
+	enum domain Actions={FASTER, SLOWER, IDLE, LANE_LEFT, LANE_RIGHT} //input action may be LANE_LEFT or LANE_RIGHT even in single lane scenarios
 	monitored inputAction: Actions
 	monitored v_self: Real //Absolute speed of the controlled vehicle
 	monitored v_front: Real //Absolute speed of the front vehicle

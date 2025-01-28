@@ -4,7 +4,7 @@ from highway_env.envs.common.action import DiscreteMetaAction
 
 from enforcer import Enforcer
 from xlsx_writer import ExcelWriter
-import observation_processor
+from observation_processor import ObservationProcessor
 import logging_manager
 
 logger = logging_manager.get_logger(__name__)
@@ -61,27 +61,52 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
             action = model.predict(state, deterministic=True)[0]
             action_descritpion = DiscreteMetaAction.ACTIONS_ALL[int(action)]
 
-            # Read the obesrvation
-            x_self, v_self, x_front, v_front = observation_processor.process(env, state)
-
-            if execute_enforcer:
-                # Do not execute the enforcer if there is no front vehicle
-                if x_front == float('inf'):
-                    logger.info("Enforcer not executed: no front vehicle observed")
-                    logger.info(f"Action: {action_descritpion}")
-                else:
-                    # Run the enforcer to sanitise the action predicted by the agent
-                    start_time = time.perf_counter()
-                    enforced_action = enforcer.sanitise_output(action_descritpion, x_self, v_self, x_front, v_front)
-                    sanitisation_delay = (time.perf_counter() - start_time) * 1000
-                    max_sanitisation_delay = max(max_sanitisation_delay, sanitisation_delay)
-                    total_sanitisation_delay += sanitisation_delay
-                    # Change the action if the enforcer returns a new different one
-                    if enforced_action != None: 
-                        action = REVERSED_ACTIONS[enforced_action]
-                        enforcer_interventions += 1
-            else:
+            # Do not execute the enforcer if the controlled vehicle is changing lane
+            # (wait until it ends the maneuver)
+            observation_processor = ObservationProcessor(env, state)
+            if observation_processor.is_controlled_vehicle_changing_lane():
+                logger.info("The controlled vehicle is changing lane, the enforcer will not be executed until the maneuver is completed")
                 logger.info(f"Action: {action_descritpion}")
+            else:
+                # Read the observation
+                x_self, v_self, x_front, v_front, right_lane_free = observation_processor.process()
+
+                # Compute the minimum safety distance (just for logging)
+                rho = 1/policy_frequency
+                a_max = 5
+                b_max = 5
+                b_min = 3
+                l_vehicle = 5
+                if x_front != float("inf"):
+                    actual_distance = x_front - x_self - l_vehicle
+                    dRSS =  v_self*rho + \
+                            (1/2)*a_max*rho**2 + \
+                            ((v_self + rho*a_max)**2)/(2*b_min) - \
+                            (v_front**2)/(2*b_max)
+                    logger.info(f"Distance to front vehicle: {actual_distance:.2f}m")
+                    logger.info(f"Minimum safety distance: {dRSS:.2f}m")
+                else:
+                    logger.info(f"Minimum safety distance can not be computed: no front vehicle observed")
+
+                # If the enforcer is running, try to sanitise the output
+                if execute_enforcer:
+                    # Do not execute the enforcer if there is no front vehicle
+                    if x_front == float('inf'):
+                        logger.info("Enforcer not executed: no front vehicle observed")
+                        logger.info(f"Action: {action_descritpion}")
+                    else:
+                        # Run the enforcer to sanitise the action predicted by the agent
+                        start_time = time.perf_counter()
+                        enforced_action = enforcer.sanitise_output(action_descritpion, x_self, v_self, x_front, v_front, right_lane_free)
+                        sanitisation_delay = (time.perf_counter() - start_time) * 1000
+                        max_sanitisation_delay = max(max_sanitisation_delay, sanitisation_delay)
+                        total_sanitisation_delay += sanitisation_delay
+                        # Change the action if the enforcer returns a new different one
+                        if enforced_action != None: 
+                            action = REVERSED_ACTIONS[enforced_action]
+                            enforcer_interventions += 1
+                else:
+                    logger.info(f"Action: {action_descritpion}")
 
             # Run the step on the environment
             next_state, reward, done, truncated, info = env.step(action)
@@ -100,6 +125,7 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
 
         total_traveled_distance += traveled_distance
 
+        # Stop the execution of the runtime model
         if execute_enforcer:
             start_time = time.perf_counter()
             enforcer.end_enforcement()
@@ -116,6 +142,7 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
         logger.info(f"Test run {i} completed in {test_execution_time:.2f}ms: {traveled_distance:.2f}km traveled")
         logger.info("")
 
+        # Add the row relative to the test run to the table
         if write_to_xslx:
             row = [
                 crash,
@@ -134,6 +161,7 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
     logger.info(f"* Crashes: {crashes} / {test_runs} runs, ({crashes / test_runs * 100:.2f}%)")
     logger.info(f"* Average distance traveled: {total_traveled_distance / test_runs:.2f}km")
 
+    # Delete the runtime models
     if execute_enforcer:
         start_time = time.perf_counter()
         enforcer.delete_runtime_model()

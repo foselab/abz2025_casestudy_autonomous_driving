@@ -7,7 +7,7 @@ asm SafetyEnforcerKeepRight
 import ../libraries/StandardLibrary
 
 signature:
-	enum domain Actions={FASTER, SLOWER, IDLE, LANE_RIGHT}
+	enum domain Actions={FASTER, SLOWER, IDLE, LANE_LEFT, LANE_RIGHT}
 	monitored inputAction: Actions
 	monitored v_self: Real //Absolute speed of the controlled vehicle
 	monitored v_front: Real //Absolute speed of the front vehicle

@@ -83,7 +83,7 @@ class Enforcer:
             self._upload_file("upload-model", self.asm_path)
             response = self._send_request("GET", "model-list")
             libraries = response.json().get("libraries")
-            if self.asm_name not in libraries:
+            if self.stdl_name not in libraries:
                 self._upload_file("upload-library", self.stdl_path)
             if self.ltl_name not in libraries:
                 self._upload_file("upload-library", self.ltl_path)
@@ -129,7 +129,7 @@ class Enforcer:
             self.logger.error(f"Failed to stop execution: {e}")
             raise
 
-    def sanitise_output(self, input_action, x_self, v_self, x_front, v_front):
+    def sanitise_output(self, input_action, x_self, v_self, x_front, v_front, right_lane_free):
         """
         Perform a step on the ASM and read the action (i.e. output sanitisation).
         """
@@ -143,6 +143,8 @@ class Enforcer:
                 "x_front": x_front,
                 "v_front": v_front}
         }
+        if self.asm_name == "SafetyEnforcerKeepRight.asm":
+            json_data["monitoredVariables"]["rightLaneFree"] = "true" if right_lane_free else "false"
         try:
             start_time = time.perf_counter()
             response = self._send_request("PUT", endpoint, json=json_data)

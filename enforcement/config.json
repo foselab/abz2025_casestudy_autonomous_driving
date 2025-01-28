@@ -1,20 +1,20 @@
 {
-  "single_lane": true,
+  "single_lane": false,
   "adversarial": true,
   "simulation": {
-    "test_runs": 2,
+    "test_runs": 1,
     "simulation_frequency": 15,
     "policy_frequency": 1,
     "duration": 100},
   "enforcer":{
     "base_port": 8080,
     "spec_path": "../asmeta spec/models",
-    "runtime_model": "SafetyEnforcerFaster.asm"},
+    "runtime_model": "SafetyEnforcerKeepRight.asm"},
   "logging":{
     "level": "INFO",
     "target_folder": "log"},
   "experiments": {
-    "write_to_xlsx": true,
+    "write_to_xlsx": false,
     "folder": "data/raw"
   }
 }
