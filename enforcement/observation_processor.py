@@ -103,9 +103,10 @@ class ObservationProcessor:
         x_front = float('inf')
         vx_front = None
         for row in self.d_a_observation[1:]:
+            presence = row[0]
             x = row[1]
             vx = row[3]
-            if 0 <= x < x_front:
+            if presence == 1 and 0 <= x < x_front:
                 x_front, vx_front = x, vx
         return x_front, vx_front
 
@@ -118,10 +119,11 @@ class ObservationProcessor:
         x_front = float('inf')
         vx_front = None
         for row in self.d_a_observation[1:]:
+            presence = row[0]
             x = row[1]
             y = row[2]
             vx = row[3]
-            if 0 < x < x_front and self._is_on_lane(y, lane):
+            if presence == 1 and 0 < x < x_front and self._is_on_lane(y, lane):
                 x_front, vx_front = x, vx
         return x_front, vx_front
 
@@ -191,4 +193,13 @@ class ObservationProcessor:
         its y-position is NOT equal to the y-coordinate associated with ANY lane (considering the tolerance).  
         """
         return self._extract_self_lane() == None
+    
+    def is_controlled_vehicle_on_right_lane(self):
+        """
+        Return true if the contorlled vehicle is on the right lane i.e. if
+        its y-position is equal to the y-coordinate associated with the right lane (considering the tolerance).
+
+        In single lane scenario, always return true
+        """
+        return self.env.config["lanes_count"] == 1 or self._extract_self_lane() == "RIGHT"
         

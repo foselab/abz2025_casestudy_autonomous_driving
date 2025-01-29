@@ -43,6 +43,7 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
         test_run_start = time.perf_counter()
         crash = False
         traveled_distance = 0
+        traveled_distance_on_right_lane = 0
         n_step = 0
         if execute_enforcer:
             total_sanitisation_delay = 0
@@ -116,7 +117,10 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
                 crashes += 1
                 crash = True
                 logger.info("Test run terminated - ego vehicle crashed")
-            traveled_distance += (v_self*(1/policy_frequency))/1000 
+            step_traveled_distance = (v_self*(1/policy_frequency))/1000
+            traveled_distance += step_traveled_distance
+            if observation_processor.is_controlled_vehicle_on_right_lane():
+                traveled_distance_on_right_lane += step_traveled_distance
             n_step += 1
 
             # Update the state (observation) and render the environment for the next step
@@ -138,14 +142,17 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
 
         test_execution_time = (time.perf_counter() - test_run_start) * 1000
         effective_duration = int(n_step/policy_frequency)
-        logger.info(f"Effective Duration: {effective_duration} simulation seconds")
-        logger.info(f"Test run {i} completed in {test_execution_time:.2f}ms: {traveled_distance:.2f}km traveled")
+        logger.info(f"Test run {i} completed in {test_execution_time:.2f}ms:")
+        logger.info(f"* Effective Duration: {effective_duration} simulation seconds")
+        logger.info(f"* Traveled distance: {traveled_distance:.2f}km")
+        logger.info(f"* Traveled distance on right lane: {traveled_distance_on_right_lane:.2f}km")
         logger.info("")
 
         # Add the row relative to the test run to the table
         if write_to_xslx:
             row = [
                 crash,
+                traveled_distance_on_right_lane,
                 traveled_distance,
                 effective_duration,
                 "NaN" if not execute_enforcer else enforcer_interventions,

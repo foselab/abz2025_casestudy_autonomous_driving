@@ -22,6 +22,7 @@ class ExcelWriter:
             "run_enforcer [True/False]",
             "runtime_model",
             "crash [True/False]",
+            "traveled_distance_on_right_lane [km]",
             "traveled_distance [km]",
             "effective_duration [s simulation time]",
             "enforcer_interventions [#]",
