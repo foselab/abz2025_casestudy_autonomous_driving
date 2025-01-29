@@ -23,6 +23,7 @@ check b_min = 3.0;
 check l_vehicle = 5.0;
 check b_max = 5.0;
 check dRSS_contr = 123.30416;
+check dRSS_upper_bound_contr = 380.0;
 check outAction = SLOWER;
 check currentAgentAction = FASTER;
 check actual_distance_contr = 24.129999999999995;
@@ -42,6 +43,7 @@ check b_min = 3.0;
 check l_vehicle = 5.0;
 check b_max = 5.0;
 check dRSS_contr = 101.81445666666669;
+check dRSS_upper_bound_contr = 380.0;
 check outAction = SLOWER;
 check currentAgentAction = FASTER;
 check actual_distance_contr = 22.28;
@@ -60,6 +62,7 @@ check b_min = 3.0;
 check l_vehicle = 5.0;
 check b_max = 5.0;
 check dRSS_contr = 67.38239;
+check dRSS_upper_bound_contr = 380.0;
 check outAction = SLOWER;
 check currentAgentAction = FASTER;
 check actual_distance_contr = 21.210000000000008;
@@ -78,6 +81,7 @@ check b_min = 3.0;
 check l_vehicle = 5.0;
 check b_max = 5.0;
 check dRSS_contr = 35.53432666666667;
+check dRSS_upper_bound_contr = 380.0;
 check outAction = SLOWER;
 check currentAgentAction = FASTER;
 check actual_distance_contr = 23.27000000000001;
@@ -98,49 +102,6 @@ check b_min = 3.0;
 check l_vehicle = 5.0;
 check b_max = 5.0;
 check dRSS_contr = 9.900566666666673;
-check outAction = FASTER; //r_goFast: set out action to FASTER
+check outAction = SLOWER; 
 check currentAgentAction = FASTER;
 check actual_distance_contr = 29.349999999999994;
-
-set inputAction := FASTER;
-set x_front := 239.88;
-set x_self := 200.0;
-set v_self := 9.32;
-set v_front := 13.39;
-
-step
-
-check a_max = 5.0;
-check resp_time = 1.0;
-check b_min = 3.0;
-check l_vehicle = 5.0;
-check b_max = 5.0;
-check dRSS_contr = 28.067856666666668;
-check outAction = FASTER; // r_Hold: keep agent action
-check currentAgentAction = FASTER;
-check actual_distance_contr = 34.879999999999995;
-
-//A vehicle approaches another vehicle in the same lane from behind, 
-//the distance decreases and safety distance is violated.
-set inputAction := FASTER;
-set x_front := 241.0;
-set x_self := 200.0;
-set v_self := 14.03;
-set v_front := 13.2;
-
-step
-
-//The Ego vehicle brakes.
-check a_max = 5.0;
-check resp_time = 1.0;
-check b_min = 3.0;
-check l_vehicle = 5.0;
-check b_max = 5.0;
-check dRSS_contr = 59.462816666666676;
-check outAction = SLOWER;
-check currentAgentAction = FASTER;
-check actual_distance_contr = 36.0;
-
-step
-
-//The Ego vehicle continues braking to maintain the safety distance.
