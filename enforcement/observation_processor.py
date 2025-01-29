@@ -7,9 +7,9 @@ import logging_manager
 
 class ObservationProcessor:
 
-    # A vechicle is said to be on a lane and not leaving or still entering it
-    # if its y position is equal to the y coordinate associated to the lane +/- the tollerance  
-    Y_TOLLERANCE = 0.1
+    # A vehicle is said to be on a lane and not leaving or entering it 
+    # if its y-position is equal to the y-coordinate associated with the lane +/- the tolerance.  
+    Y_TOLERANCE = 0.1
 
     def __init__(self, env, observation):
         """
@@ -51,35 +51,44 @@ class ObservationProcessor:
                 df.iloc[index, 1:] = 0
         return df.values
 
-    def _is_on_lane(self, y, lane, tollerance=Y_TOLLERANCE):
+    def _is_on_lane(self, y, lane, tolerance=Y_TOLERANCE):
         """
-        TODO
+        Given the y position of a vehicle and a lane, return true if the vehicle is occupying the lane.
+
+        A vehicle is occupying a lane if:
+            o	is traveling straight ahead in the lane
+            o	is leaving the lane but not yet travelling straight on the other lane
+            o	is another lane to enter the lane in question and not yet travelling straight on the lane in question
+        
+        Assumption: a vehicle il proceeding straight on a lane if its y position is close enough to the y position associated to that lane.
         """
         if lane == "LEFT":
             return (
                 y < self.lane_to_y_map["MIDDLE"] and
-                not math.isclose(y, y < self.lane_to_y_map["MIDDLE"], abs_tol = tollerance)
+                not math.isclose(y, self.lane_to_y_map["MIDDLE"], abs_tol = tolerance)
             )
         elif lane == "MIDDLE":
             return (
                 self.lane_to_y_map["LEFT"] < y < self.lane_to_y_map["RIGHT"] and
-                not math.isclose(y, self.lane_to_y_map["LEFT"], abs_tol = tollerance) and
-                not math.isclose(y, self.lane_to_y_map["RIGHT"], abs_tol = tollerance)
+                not math.isclose(y, self.lane_to_y_map["LEFT"], abs_tol = tolerance) and
+                not math.isclose(y, self.lane_to_y_map["RIGHT"], abs_tol = tolerance)
             )
         elif lane == "RIGHT":
             return (
                 y > self.lane_to_y_map["MIDDLE"] and
-                not math.isclose(y, self.lane_to_y_map["MIDDLE"], abs_tol = tollerance)
+                not math.isclose(y, self.lane_to_y_map["MIDDLE"], abs_tol = tolerance)
             )
+        raise Exception(f"{lane} should be 'LEFT', 'RIGHT' or 'MIDDLE'")
 
     def _extract_self_lane(self):
         """
         Extract the lane of the ego vehicle (i.e. the controlled vehicle, self), None if it is changing lane
 
-        TODO
+        A vehicle is said to be on a lane and not leaving or entering it 
+        if its y-position is equal to the y-coordinate associated with the lane +/- the tolerance.
         """
         y = self.d_a_observation[0][2]
-        return next((self.y_to_lane_map[lane_y_pos] for lane_y_pos in self.y_to_lane_map if math.isclose(y, lane_y_pos, abs_tol=self.Y_TOLLERANCE)), None)
+        return next((self.y_to_lane_map[lane_y_pos] for lane_y_pos in self.y_to_lane_map if math.isclose(y, lane_y_pos, abs_tol=self.Y_TOLERANCE)), None)
     
     def _extract_self(self):
         """
@@ -87,7 +96,7 @@ class ObservationProcessor:
         """
         return self.d_a_observation[0][1], self.d_a_observation[0][3] 
 
-    def _extract_front_single_lane(self, x_ego_vehicle):
+    def _extract_front_single_lane(self):
         """
         Extract x position and velocity of the vehicle in front of the ego vehicle for single lane scenario
         """
@@ -96,7 +105,7 @@ class ObservationProcessor:
         for row in self.d_a_observation[1:]:
             x = row[1]
             vx = row[3]
-            if x_ego_vehicle <= x < x_front:
+            if 0 <= x < x_front:
                 x_front, vx_front = x, vx
         return x_front, vx_front
 
@@ -146,7 +155,7 @@ class ObservationProcessor:
         for a single lane highway 
         """
         x_self, v_self = self._extract_self()
-        x_front, v_front = self._extract_front_single_lane(x_self)
+        x_front, v_front = self._extract_front_single_lane()
         return x_self, v_self, x_front, v_front
         
     def process(self):
@@ -178,7 +187,8 @@ class ObservationProcessor:
 
     def is_controlled_vehicle_changing_lane(self):
         """
-        TODO
+        Return true if the contorlled vehicle is changing lane, i.e. if
+        its y-position is NOT equal to the y-coordinate associated with ANY lane (considering the tolerance).  
         """
         return self._extract_self_lane() == None
         

@@ -2,7 +2,7 @@
   "single_lane": false,
   "adversarial": true,
   "simulation": {
-    "test_runs": 1,
+    "test_runs": 10,
     "simulation_frequency": 15,
     "policy_frequency": 1,
     "duration": 100},
