@@ -37,6 +37,7 @@ signature:
 	
 	derived dRSS: Real //Safety distance
 	derived actual_distance: Real //Actual distance between two vehicles considering their length
+	derived current_max_acc: Real //current maximum acceleration
 	
 definitions:
 	
@@ -44,11 +45,14 @@ definitions:
 	function gofast_perc = 1.7
 	function dRSS_breakdist = 5.0
 	
+	function current_max_acc = if (v_self=v_max) then  0.0 else a_max endif
+	//if vehicle reaches max speed, the maximum acceleration is 0, otherwise is a_max.
+	// Since from req spec, once the vehicle reaches the maximum speed, it cannot accelerate further.
+	
 	function dRSS = max(0.0, ((v_self*resp_time) + 
-	(0.5 *a_max * (resp_time * resp_time)) + 
-	(((v_self+resp_time*a_max) * (v_self+resp_time*a_max))/(2.0*b_min)) - 
+	(0.5 *current_max_acc * (resp_time * resp_time)) + 
+	(((v_self+resp_time*current_max_acc) * (v_self+resp_time*current_max_acc))/(2.0*b_min)) - 
 	((v_front * v_front)/(2.0*b_max))))
-
 	function actual_distance = x_front - x_self - l_vehicle
 
 	

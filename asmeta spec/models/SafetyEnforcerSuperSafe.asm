@@ -30,45 +30,61 @@ signature:
 	
 	controlled dRSS_contr: Real
 	controlled actual_distance_contr: Real
+	controlled dRSS_upper_bound_contr: Real
 	
 	static v_max: Real // m/s
 	
 	static dRSS_breakdist: Real //quando frenare prima di violare la safety distance -> dRSS + dRSS_perc%
 	
 	derived dRSS: Real //Safety distance
-	static dRSS_safe: Real 
+	static dRSS_upper_bound: Real 
 	derived actual_distance: Real //Actual distance between two vehicles considering their length
+	derived current_max_acc: Real //current maximum acceleration
 	
 definitions:
 	
 	function v_max = 40.0
 	function dRSS_breakdist = 5.0 // m
 	
-	function dRSS_safe = 160.0 // m
+
+	/*function dRSS_upper_bound = max(0.0, ((v_max*resp_time) + 
+	((v_max * v_max)/(2.0*b_min)))) // about 306.7 m*/
+	
+	// dRSS_upper_bound: is the safest distance observable assuming that the ego vehicle speed is v_max and it
+	// still accelerating at a_max and the front vehicle speed is 0. (WORST SCENARIO)
+	// Assuming that the maximum perception distance is 200 m we cannot guarantee that the dRSS_upper_bound 
+	// is maintained by the ego vehicle and the enforcer is not activated
+	function dRSS_upper_bound = max(0.0, ((v_max*resp_time) + 
+	(0.5 *a_max * (resp_time * resp_time)) + 
+	(((v_max+resp_time*a_max) * (v_max+resp_time*a_max))/(2.0*b_min))))
+	
+	function current_max_acc = if (v_self=v_max) then  0.0 else a_max endif
+	//if vehicle reaches max speed, the maximum acceleration is 0, otherwise is a_max.
+	// Since from req spec, once the vehicle reaches the maximum speed, it cannot accelerate further.
 	
 	function dRSS = max(0.0, ((v_self*resp_time) + 
-	(0.5 *a_max * (resp_time * resp_time)) + 
-	(((v_self+resp_time*a_max) * (v_self+resp_time*a_max))/(2.0*b_min)) - 
+	(0.5 *current_max_acc * (resp_time * resp_time)) + 
+	(((v_self+resp_time*current_max_acc) * (v_self+resp_time*current_max_acc))/(2.0*b_min)) - 
 	((v_front * v_front)/(2.0*b_max))))
-
+	
 	function actual_distance = x_front - x_self - l_vehicle
 
 	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
-		if (actual_distance>(dRSS_safe + dRSS_breakdist)) then 
+		if (actual_distance>(dRSS_upper_bound + dRSS_breakdist)) then 
 			outAction := inputAction
 		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance<=(dRSS_safe+dRSS_breakdist)) then 
+		if (actual_distance<=(dRSS_upper_bound+dRSS_breakdist)) then 
 			outAction := SLOWER
 		endif
 
-	LTLSPEC g((v_self<=v_max and v_front>0.0) implies dRSS_safe>dRSS)
+	LTLSPEC g((v_self<=v_max and v_front>0.0) implies dRSS_upper_bound>dRSS)
 	
-	//actual_distance < dRSS and v_self < -5 implies dRSS_safe>dRSS
+	//actual_distance < dRSS and v_self < -5 implies dRSS_upper_bound>dRSS
 		
 	main rule r_Main =
 		par
@@ -77,6 +93,7 @@ definitions:
 			r_unsafeDistance[]
 			dRSS_contr := dRSS
 			actual_distance_contr := actual_distance
+			dRSS_upper_bound_contr := dRSS_upper_bound
 		endpar
 	
 
