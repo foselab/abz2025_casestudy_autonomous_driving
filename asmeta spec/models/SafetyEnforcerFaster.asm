@@ -53,6 +53,7 @@ definitions:
 	(0.5 *current_max_acc * (resp_time * resp_time)) + 
 	(((v_self+resp_time*current_max_acc) * (v_self+resp_time*current_max_acc))/(2.0*b_min)) - 
 	((v_front * v_front)/(2.0*b_max))))
+	
 	function actual_distance = x_front - x_self - l_vehicle
 
 	
@@ -85,12 +86,7 @@ definitions:
 		endpar
 	
 
-	//Esempi di enforcement rule 
-	// se distanza da front  d_f > d_min and agent action diversa da IDLE then IDLE
-	// se  d_f <= d_min and action diversa da SLOWER then SLOWER and alert
-        // se distanza da front  d_f >> d_min and agent action diversa da FASTER then FASTER
-        
-   default init s0:
+default init s0:
    function a_max = 5.0
    function b_max = 5.0
    function b_min = 3.0

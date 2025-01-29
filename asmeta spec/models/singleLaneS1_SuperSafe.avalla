@@ -1,6 +1,6 @@
 scenario singleLaneS1
 
-load SafetyEnforcerFaster.asm
+load SafetyEnforcerSuperSafe.asm
 
 check a_max = 5.0;
 check resp_time = 1.0;
