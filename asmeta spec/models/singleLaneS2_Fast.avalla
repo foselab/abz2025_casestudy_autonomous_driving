@@ -1,0 +1,142 @@
+scenario singleLaneS2_Fast
+
+load SafetyEnforcerFaster.asm
+
+check a_max = 5.0;
+check resp_time = 1.0;
+check b_min = 3.0;
+check l_vehicle = 5.0;
+check b_max = 5.0;
+
+set inputAction := FASTER;
+set x_front := 222.80422973632812;
+set x_self := 191.0946044921875;
+set v_front := 23.561508178710938;
+set v_self := 25.0;
+
+step
+
+//The Ego vehicle brakes because actual distance is lower than dRSS
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 121.98553323445375;
+check actual_distance_contr = 26.709625244140625;
+
+
+set inputAction := FASTER;
+set x_front := 230.10316467285156;
+set x_self := 200.0;
+set v_front := 18.306747436523438;
+set v_self := 20.854446411132812;
+
+step
+
+//The Ego vehicle continues braking to maintain the safety distance.
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 101.24947944502347;
+check actual_distance_contr = 25.103164672851562;
+
+
+set inputAction := FASTER;
+set x_front := 229.1914520263672;
+set x_self := 200.0;
+set v_front := 15.834609985351562;
+set v_self := 16.000450134277344;
+
+step
+
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 66.93011376916937;
+check actual_distance_contr = 24.191452026367188;
+
+set inputAction := FASTER;
+set x_front := 231.39627075195312;
+set x_self := 200.0;
+set v_front := 14.591377258300781;
+set v_self := 11.025405883789062;
+
+step
+
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 35.03684914441352;
+check actual_distance_contr = 26.396270751953125;
+
+set inputAction := FASTER;
+set x_front := 237.63958740234375;
+set x_self := 200.0;
+set v_front := 13.908561706542969;
+set v_self := 6.029670715332031;
+
+step
+
+//The Ego vehicle accelerates because actual distance is higher than dRSS
+//The agent action is held
+check currentAgentAction = FASTER;
+check outAction = FASTER;
+check dRSS_contr = 9.460467855636185;
+check actual_distance_contr = 32.63958740234375;
+
+
+// Sub-scenario: A vehicle approaches another vehicle in the same lane from behind, 
+// the difference between the actual distance and the safety distance decreases
+set inputAction := FASTER;
+set x_front := 243.3207244873047;
+set x_self := 200.0;
+set v_front := 13.5101318359375;
+set v_self := 9.321517944335938;
+
+step
+
+check currentAgentAction = FASTER;
+check outAction = FASTER;
+check dRSS_contr = 27.753464426884115;
+check actual_distance_contr = 38.32072448730469;
+
+
+set inputAction := FASTER;
+set x_front := 244.5302734375;
+set x_self := 200.0;
+set v_front := 13.259895324707031;
+set v_self := 14.029617309570312;
+
+step
+
+//The safety distance is violated, the Ego vehicle brakes.
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 59.30152406546791;
+check actual_distance_contr = 39.5302734375;
+
+
+set inputAction := FASTER;
+set x_front := 245.7002410888672;
+set x_self := 200.0;
+set v_front := 13.086685180664062;
+set v_self := 10.688613891601562;
+
+step
+
+//The Ego vehicle continues braking to maintain the safety distance.
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 37.084581963112576;
+check actual_distance_contr = 40.70024108886719;
+
+set inputAction := FASTER;
+set x_front := 250.89273071289062;
+set x_self := 200.0;
+set v_front := 12.954170227050781;
+set v_self := 5.9721221923828125;
+
+step
+
+//The actual distance is greater than the safety distance, the state is safe.
+check currentAgentAction = FASTER;
+check outAction = FASTER;
+check dRSS_contr = 11.755647132671829;
+check actual_distance_contr = 45.892730712890625;
+
+step

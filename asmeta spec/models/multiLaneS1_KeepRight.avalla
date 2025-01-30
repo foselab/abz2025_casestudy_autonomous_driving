@@ -1,0 +1,88 @@
+scenario multiLaneS1_KeepRight
+
+load SafetyEnforcerKeepRight.asm
+
+
+check a_max = 5.0;
+check resp_time = 1.0;
+check b_min = 3.0;
+check l_vehicle = 5.0;
+check b_max = 5.0;
+
+// A vehicle approaches another vehicle in the same lane from behind 
+set inputAction := FASTER;
+set x_front := 279.0476989746094;
+set x_self := 189.82534790039062;
+set v_front := 21.011314392089844;
+set v_self := 16.000450134277344;
+set rightLaneFree := false;
+
+step
+
+check currentAgentAction = FASTER;
+check outAction = FASTER;
+check dRSS_contr = 47.85606785966472;
+check actual_distance_contr = 84.22235107421875;
+
+set inputAction := FASTER;
+set x_front := 242.87396240234375;
+set x_self := 200.0;
+set v_front := 18.041030883789062;
+set v_self := 19.31652069091797;
+set rightLaneFree := false;
+
+step
+
+//The right lane is not free, the safety distance is violated, the Ego vehicle brakes.
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 87.81750424124183;
+check actual_distance_contr = 37.87396240234375;
+
+
+set inputAction := FASTER;
+set x_front := 244.0010986328125;
+set x_self := 200.0;
+set v_front := 18.402610778808594;
+set v_self := 15.737648010253906;
+set rightLaneFree := false;
+
+step
+
+//The Ego vehicle keeps braking.
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 56.047047162152985;
+check actual_distance_contr = 39.0010986328125;
+
+set inputAction := FASTER;
+set x_front := 249.587158203125;
+set x_self := 200.0;
+set v_front := 18.46923065185547;
+set v_self := 10.980491638183594;
+set rightLaneFree := true;
+
+step
+
+//The right lane is free, the Ego vehicle changes lane.
+check currentAgentAction = FASTER;
+check outAction = LANE_RIGHT;
+check dRSS_contr = 21.931929050715794;
+check actual_distance_contr = 44.587158203125;
+
+set inputAction := FASTER;
+set x_front := 314.2624816894531;
+set x_self := 200.0;
+set v_front := 16.9366455078125;
+set v_self := 19.00439453125;
+set rightLaneFree := false;
+
+step
+
+//After changing lane, the actual distance is smaller than the safety distance and the Ego vehicle accelerate
+check currentAgentAction = FASTER;
+check outAction = FASTER;
+check dRSS_contr = 88.85455789417028;
+check actual_distance_contr = 109.26248168945312;
+
+step

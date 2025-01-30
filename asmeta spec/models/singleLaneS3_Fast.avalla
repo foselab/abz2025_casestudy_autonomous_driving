@@ -1,0 +1,80 @@
+scenario singleLaneS3
+
+load SafetyEnforcerFaster.asm
+
+check a_max = 5.0;
+check resp_time = 1.0;
+check b_min = 3.0;
+check l_vehicle = 5.0;
+check b_max = 5.0;
+
+set inputAction := LANE_RIGHT;
+set x_front := 324.423828125;
+set x_self := 200.0;
+set v_front := 18.883438110351562;
+set v_self := 19.291465759277344;
+
+step
+
+//The agent action is held because the actual distance is greater than dRSS but by a factor smaller than 70%.
+check currentAgentAction = LANE_RIGHT;
+check outAction = LANE_RIGHT;
+check dRSS_contr = 84.4789270615535;
+check actual_distance_contr = 119.423828125;
+
+set inputAction := LANE_RIGHT;
+set x_front := 323.66680908203125;
+set x_self := 200.0;
+set v_front := 18.8985595703125;
+set v_self := 19.878921508789062;
+
+step
+
+check currentAgentAction = LANE_RIGHT;
+check outAction = LANE_RIGHT;
+check dRSS_contr = 89.82348869893855;
+check actual_distance_contr = 118.66680908203125;
+
+//The agent decides to decelerate
+set inputAction := SLOWER;
+set x_front := 322.6325988769531;
+set x_self := 200.0;
+set v_front := 18.913497924804688;
+set v_self := 19.97930908203125;
+
+step
+
+check currentAgentAction = SLOWER;
+check outAction = SLOWER;
+check dRSS_contr = 90.70158240948028;
+check actual_distance_contr = 117.63259887695312;
+
+set inputAction := LANE_RIGHT;
+set x_front := 324.075927734375;
+set x_self := 200.0;
+set v_front := 18.928260803222656;
+set v_self := 15.850906372070312;
+
+step
+
+//The Ego vehicle accelerates because the actual distance is greater than dRSS by a factor greater than 70%.
+check currentAgentAction = LANE_RIGHT;
+check outAction = FASTER;
+check dRSS_contr = 54.98305009139585;
+check actual_distance_contr = 119.075927734375;
+
+set inputAction := LANE_RIGHT;
+set x_front := 325.0750427246094;
+set x_self := 200.0;
+set v_front := 18.942840576171875;
+set v_self := 19.290969848632812;
+
+step
+
+//The agent action is held because the actual distance is greater than dRSS but by a factor smaller than 70%.
+check currentAgentAction = LANE_RIGHT;
+check outAction = LANE_RIGHT;
+check dRSS_contr = 84.24971830373786;
+check actual_distance_contr = 120.07504272460938;
+
+step

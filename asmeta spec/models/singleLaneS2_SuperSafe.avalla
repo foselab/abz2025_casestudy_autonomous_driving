@@ -1,0 +1,87 @@
+scenario singleLaneS2_SuperSafe
+
+load SafetyEnforcerSuperSafe.asm
+
+check a_max = 5.0;
+check resp_time = 1.0;
+check b_min = 3.0;
+check l_vehicle = 5.0;
+check b_max = 5.0;
+
+set inputAction := FASTER;
+set x_front := 222.80422973632812;
+set x_self := 191.0946044921875;
+set v_front := 23.561508178710938;
+set v_self := 25.0;
+
+step
+
+//The Ego vehicle brakes because actual distance is lower than the dRSS upper bound
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 121.98553323445375;
+check dRSS_upper_bound_contr = 380.0;
+check actual_distance_contr = 26.709625244140625;
+
+
+set inputAction := FASTER;
+set x_front := 230.10316467285156;
+set x_self := 200.0;
+set v_front := 18.306747436523438;
+set v_self := 20.854446411132812;
+
+step
+
+//The Ego vehicle continues braking.
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 101.24947944502347;
+check dRSS_upper_bound_contr = 380.0;
+check actual_distance_contr = 25.103164672851562;
+
+
+set inputAction := FASTER;
+set x_front := 229.1914520263672;
+set x_self := 200.0;
+set v_front := 15.834609985351562;
+set v_self := 16.000450134277344;
+
+step
+
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 66.93011376916937;
+check dRSS_upper_bound_contr = 380.0;
+check actual_distance_contr = 24.191452026367188;
+
+set inputAction := FASTER;
+set x_front := 231.39627075195312;
+set x_self := 200.0;
+set v_front := 14.591377258300781;
+set v_self := 11.025405883789062;
+
+step
+
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 35.03684914441352;
+check dRSS_upper_bound_contr = 380.0;
+check actual_distance_contr = 26.396270751953125;
+
+set inputAction := FASTER;
+set x_front := 237.63958740234375;
+set x_self := 200.0;
+set v_front := 13.908561706542969;
+set v_self := 6.029670715332031;
+
+step
+
+//The Ego vehicle continues braking because the actual distance is greater than the safety distance
+// but grater than the upper bound
+check currentAgentAction = FASTER;
+check outAction = SLOWER;
+check dRSS_contr = 9.460467855636185;
+check dRSS_upper_bound_contr = 380.0;
+check actual_distance_contr = 32.63958740234375;
+
+step
