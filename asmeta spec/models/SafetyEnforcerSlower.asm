@@ -33,8 +33,6 @@ signature:
 	
 	static v_max: Real // m/s
 	
-	static dRSS_breakdist: Real //quando frenare prima di violare la safety distance -> dRSS + dRSS_perc%
-	
 	derived dRSS: Real //Safety distance
 	derived actual_distance: Real //Actual distance between two vehicles considering their length
 	derived current_max_acc: Real //current maximum acceleration
@@ -42,8 +40,7 @@ signature:
 definitions:
 	
 	function v_max = 40.0
-	function dRSS_breakdist = 5.0
-	
+
 	function current_max_acc = if (v_self=v_max) then  0.0 else a_max endif
 	//if vehicle reaches max speed, the maximum acceleration is 0, otherwise is a_max.
 	// Since from req spec, once the vehicle reaches the maximum speed, it cannot accelerate further.
@@ -58,18 +55,18 @@ definitions:
 	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
-		if (actual_distance>(dRSS + dRSS_breakdist)) then 
+		if (actual_distance>(dRSS+l_vehicle)) then 
 			outAction := inputAction
 		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance<=(dRSS + dRSS_breakdist)) then 
+		if (actual_distance<=(dRSS+l_vehicle)) then 
 			outAction := SLOWER
 		endif
 	
-	LTLSPEC g((actual_distance<=(dRSS + dRSS_breakdist)) implies x(outAction=SLOWER))
-	LTLSPEC g((actual_distance>(dRSS + dRSS_breakdist)) implies x(outAction=currentAgentAction))
+	LTLSPEC g((actual_distance<=(dRSS + l_vehicle)) implies x(outAction=SLOWER))
+	LTLSPEC g((actual_distance>(dRSS + l_vehicle)) implies x(outAction=currentAgentAction))
 	
 			
 			

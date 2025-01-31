@@ -34,8 +34,6 @@ signature:
 	
 	static v_max: Real // m/s
 	
-	static dRSS_breakdist: Real //quando frenare prima di violare la safety distance -> dRSS + dRSS_perc%
-	
 	derived dRSS: Real //Safety distance
 	static dRSS_upper_bound: Real 
 	derived actual_distance: Real //Actual distance between two vehicles considering their length
@@ -44,8 +42,6 @@ signature:
 definitions:
 	
 	function v_max = 40.0
-	function dRSS_breakdist = 5.0 // m
-	
 
 	/*function dRSS_upper_bound = max(0.0, ((v_max*resp_time) + 
 	((v_max * v_max)/(2.0*b_min)))) // about 306.7 m*/
@@ -72,13 +68,13 @@ definitions:
 	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
-		if (actual_distance>(dRSS_upper_bound + dRSS_breakdist)) then 
+		if (actual_distance>(dRSS_upper_bound+l_vehicle)) then 
 			outAction := inputAction
 		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance<=(dRSS_upper_bound+dRSS_breakdist)) then 
+		if (actual_distance<=(dRSS_upper_bound+l_vehicle)) then 
 			outAction := SLOWER
 		endif
 
