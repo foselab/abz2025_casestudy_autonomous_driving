@@ -74,21 +74,21 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
 
                 # Compute the minimum safety distance (just for logging)
                 rho = 1/policy_frequency
-                a_max = 5
-                b_max = 5
+                v_max = 40
+                a_max = 0 if v_self == v_max else 5
+                b_max = 5 
                 b_min = 3
                 l_vehicle = 5
                 if x_front != float("inf"):
                     actual_distance = x_front - x_self - l_vehicle
-                    dRSS =  v_self*rho + \
+                    dRSS =  max(0, v_self*rho + \
                             (1/2)*a_max*rho**2 + \
                             ((v_self + rho*a_max)**2)/(2*b_min) - \
-                            (v_front**2)/(2*b_max)
+                            (v_front**2)/(2*b_max))
                     logger.info(f"Distance to front vehicle: {actual_distance:.2f}m")
                     logger.info(f"Minimum safety distance: {dRSS:.2f}m")
                 else:
                     logger.info(f"Minimum safety distance can not be computed: no front vehicle observed")
-
                 # If the enforcer is running, try to sanitise the output
                 if execute_enforcer:
                     # Do not execute the enforcer if there is no front vehicle
