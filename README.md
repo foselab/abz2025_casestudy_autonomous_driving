@@ -21,6 +21,54 @@ python highway_agent.py train
 python highway_agent.py test
 ```
 
+## Running tests using the Enforcement Framework
+This guide assumes you are using a **Linux environment** with **Python 3.11**. \
+Setup:
+
+```bash
+python -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+```
+
+Tests on the autonomous driving system can be run either with or without enforcement via the command line:
+
+```bash
+cd enforcement
+
+# To run without enforcement:
+python autonomous_driving_system.py
+
+
+# To run with enforcement:
+python autonomous_driving_system.py run_enforcer
+```
+
+In both cases, the configuration of the environment, the controlled vehicle, and other simulation-related parameters can be modified by editing the `enforcement/config.json` file. \
+For example, assuming a local server is running the AsmetaS@run.time simulator on port 8080, the following configuration sets up 10 test runs, each lasting 100 simulation seconds, in a multi-lane scenario with an adversarial agent and the `SafetyEnforcerKeepRight.asm` as runtime model:
+
+```json
+{
+  "single_lane": false,
+  "adversarial": true,
+  "simulation": {
+    "test_runs": 10,
+    "simulation_frequency": 15,
+    "policy_frequency": 1,
+    "duration": 100},
+  "enforcer":{
+    "base_port": 8080,
+    "spec_path": "../asmeta spec/models",
+    "runtime_model": "SafetyEnforcerKeepRight.asm"},
+  "logging":{
+    "level": "INFO",
+    "target_folder": "log"},
+  "experiments": {
+    "write_to_xlsx": true,
+    "folder": "data/"
+  }
+}
+```
 
 ## Scenarios
 
