@@ -29,6 +29,7 @@ Setup:
 python -m venv env
 source env/bin/activate
 pip install -r requirements.txt
+pip install requests
 ```
 
 Tests on the autonomous driving system can be run either with or without enforcement via the command line:
