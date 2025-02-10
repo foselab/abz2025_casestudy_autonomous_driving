@@ -1,33 +1,38 @@
+import os
+import sys
+import uuid
 import time
 from stable_baselines3 import DQN
 from highway_env.envs.common.action import DiscreteMetaAction
 
-from enforcer import Enforcer
-from xlsx_writer import ExcelWriter
-from observation_processor import ObservationProcessor
 import logging_manager
+from configuration_manager import ConfigurationManager
+from enforcer import Enforcer
+from model_uploader import ModelUploader
+from experiment_data_exporter import ExperimentDataExporter
+from observation_processor import ObservationProcessor
 
-logger = logging_manager.get_logger(__name__)
-REVERSED_ACTIONS = {value: key for key, value in DiscreteMetaAction.ACTIONS_ALL.items()}
-
-def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter):
+def run(model_path, env, enforcer:Enforcer, model_uploader:ModelUploader, test_runs, data_exporter:ExperimentDataExporter):
     """
-    Run a series of tests
+    Run a series of tests for the Autonomous Driving System, with or without enforcement
 
     Parameters:
         model_path (str): Path to the trained AI model.
         env (gym.Env): The simulation environment in which the model will be tested.
         enforcer (Enforcer or None): An optional enforcement module to validate and correct actions.
+        model_uploader(ModelUploader or None): An optional module for uploading the asm spec and the asm libraries.
         test_runs (int): Number of test episodes to run.
-        xlsx_writer (ExcelWriter or None): An optional already initialized xlsx file writer
+        data_exporter (ExperimentDataExporter or None): An optional already initialized experiment data exporter
 
     Returns:
         None
     """
         
     execute_enforcer = enforcer != None
-    write_to_xslx = xlsx_writer != None
+    write_to_xslx = data_exporter != None
     policy_frequency = env.config["policy_frequency"]
+
+    REVERSED_ACTIONS = {value: key for key, value in DiscreteMetaAction.ACTIONS_ALL.items()}
 
     model = DQN.load(model_path)
 
@@ -35,7 +40,7 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
     total_traveled_distance = 0
     if execute_enforcer:
         start_time = time.perf_counter()
-        enforcer.upload_runtime_model()
+        model_uploader.upload_runtime_model()
         upload_delay = (time.perf_counter() - start_time) * 1000
 
     for i in range(test_runs):
@@ -65,11 +70,11 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
             # Do not execute the enforcer if the controlled vehicle is changing lane
             # (wait until it ends the maneuver)
             observation_processor = ObservationProcessor(env, state)
+            
             if observation_processor.is_controlled_vehicle_changing_lane():
                 logger.info("The controlled vehicle is changing lane, the enforcer will not be executed until the maneuver is completed")
                 logger.info(f"Action: {action_descritpion}")
             else:
-                # Read the observation
                 x_self, v_self, x_front, v_front, right_lane_free = observation_processor.process()
 
                 # Compute the minimum safety distance (just for logging)
@@ -106,6 +111,20 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
                         if enforced_action != None: 
                             action = REVERSED_ACTIONS[enforced_action]
                             enforcer_interventions += 1
+
+                    '''
+                    logger.error(f"set inputAction := {action_descritpion};")
+                    logger.error(f"set x_front := {x_front};")
+                    logger.error(f"set x_self := {x_self};")
+                    logger.error(f"set v_front := {v_front};")
+                    logger.error(f"set v_self := {v_self};")
+                    logger.error(f"set right_lane_free := {right_lane_free};")
+                    logger.error(f"step")
+                    logger.error(f"check currentAgentAction = {action_descritpion};")
+                    logger.error(f"check outAction = {enforced_action};")
+                    logger.error(f"check dRSS_contr = {dRSS};")
+                    logger.error(f"check actual_distance_contr = {actual_distance};")
+                    '''
                 else:
                     logger.info(f"Action: {action_descritpion}")
 
@@ -162,7 +181,7 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
                 "NaN" if not execute_enforcer else max_sanitisation_delay,
                 test_execution_time
             ]
-            xlsx_writer.add_row(row)
+            data_exporter.add_row(row)
 
     logger.info(f"Global metrics on {test_runs} test runs:")
     logger.info(f"* Crashes: {crashes} / {test_runs} runs, ({crashes / test_runs * 100:.2f}%)")
@@ -171,9 +190,60 @@ def test(model_path, env, enforcer:Enforcer, test_runs, xlsx_writer:ExcelWriter)
     # Delete the runtime models
     if execute_enforcer:
         start_time = time.perf_counter()
-        enforcer.delete_runtime_model()
+        model_uploader.delete_runtime_model()
         delete_delay = (time.perf_counter() - start_time) * 1000
         logger.info(f"Upload model delay: {upload_delay:.2f}ms")
         logger.info(f"Delete model delay: {delete_delay:.2f}ms")
 
     env.close()
+
+if __name__ == '__main__':
+    CONFIG_FILE = "config.json"
+
+    run_enforcer = True if (len(sys.argv) == 2 and sys.argv[1] == "run_enforcer") else False
+
+    # Setup Configuration Manager
+    config_manager = ConfigurationManager(CONFIG_FILE)
+
+    # Setup Logging
+    execution_id = uuid.uuid4()
+    level, log_folder = config_manager.get_logging_params()
+    logging_manager.setup_logging(level, log_folder, execution_id)
+    logger = logging_manager.get_logger(__name__)
+
+    logger.info(f"Loaded config.json - Starting execution with id {execution_id}")
+    config_manager.log_configuration()
+
+    # Initialize the xlsx writer
+    write_to_xlsx = config_manager.write_to_xlsx()
+    if write_to_xlsx:
+        config_sub_row = [
+            execution_id,
+            config_manager.get_policy_frequency(),
+            config_manager.get_policy(),
+            "single" if config_manager.is_single_lane() else "multi",
+            run_enforcer,
+            "NaN" if not run_enforcer else config_manager.get_runtime_model()
+        ]
+        data_exporter = ExperimentDataExporter(config_manager.get_experiments_folder(), config_sub_row)
+
+    # Obtain the path of the trained model
+    folder = ("single_" if config_manager.is_single_lane() else "") + config_manager.get_policy()
+    model_path = os.path.join("..", folder, "new", "trained_model")
+
+    # Configura the Environment (HighwayEnv)
+    env = config_manager.configure_env()
+
+    # Run the tests
+    test_runs = config_manager.get_test_runs()
+    if (run_enforcer):
+        port, asm_path, asm_file_name = config_manager.get_enforcer_params()
+        enforcer = Enforcer(port, asm_file_name)
+        model_uploader = ModelUploader(port, asm_path, asm_file_name)
+        run(model_path, env, enforcer, model_uploader, test_runs, data_exporter if write_to_xlsx else None)
+    else:
+        run(model_path, env, None, None, test_runs, data_exporter if write_to_xlsx else None)
+
+    # Write to the excel file
+    if write_to_xlsx:
+        data_exporter.write_xlsx()

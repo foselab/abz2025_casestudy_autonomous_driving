@@ -37,6 +37,7 @@ class ObservationProcessor:
         """
         features = obs_config.features
         features_range = obs_config.features_range
+        print(features_range)
         df = pd.DataFrame(normalized_observation, columns=features)
         # Denormalize each feature
         for feature, f_range in features_range.items():
@@ -185,6 +186,7 @@ class ObservationProcessor:
         x_self, v_self, x_front = map(float, (x_self, v_self, x_front))
         if v_front != None:
             v_front = float(v_front)
+
         return x_self, v_self, x_front, v_front, right_lane_free
 
     def is_controlled_vehicle_changing_lane(self):

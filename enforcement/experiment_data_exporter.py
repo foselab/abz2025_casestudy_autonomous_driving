@@ -4,7 +4,7 @@ import os
 
 import logging_manager
 
-class ExcelWriter:
+class ExperimentDataExporter:
 
     def __init__(self, folder, config_columns_value):
         """
