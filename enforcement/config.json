@@ -1,6 +1,6 @@
 {
-  "single_lane": true,
-  "adversarial": false,
+  "single_lane": false,
+  "adversarial": true,
   "simulation": {
     "test_runs": 1,
     "simulation_frequency": 15,
@@ -9,12 +9,12 @@
   "enforcer":{
     "base_port": 8080,
     "spec_path": "../asmeta spec/models",
-    "runtime_model": "SafetyEnforcerFaster.asm"},
+    "runtime_model": "SafetyEnforcerKeepRight.asm"},
   "logging":{
     "level": "INFO",
     "target_folder": "log"},
   "experiments": {
     "write_to_xlsx": true,
-    "folder": "data/temp"
+    "target_folder": "data/temp"
   }
 }

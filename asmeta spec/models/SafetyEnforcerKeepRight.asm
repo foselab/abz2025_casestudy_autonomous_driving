@@ -58,14 +58,14 @@ definitions:
 	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
-		if (actual_distance>(dRSS+l_vehicle) and actual_distance<=(dRSS*gofast_perc)) then 
+		if (actual_distance>dRSS and actual_distance<=(dRSS*gofast_perc)) then 
 		if (not rightLaneFree) then
 			outAction := inputAction
 		endif endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance<=(dRSS+l_vehicle)) then 
+		if (actual_distance<=dRSS) then 
 			if (not rightLaneFree) then
 				outAction := SLOWER
 		endif endif

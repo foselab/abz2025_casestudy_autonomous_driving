@@ -29,6 +29,7 @@ Setup:
 python -m venv env
 source env/bin/activate
 pip install -r requirements.txt
+pip install requests
 ```
 
 Tests on the autonomous driving system can be run either with or without enforcement via the command line:
@@ -65,7 +66,7 @@ For example, assuming a local server is running the AsmetaS@run.time simulator o
     "target_folder": "log"},
   "experiments": {
     "write_to_xlsx": true,
-    "folder": "data/"
+    "target_folder": "data/"
   }
 }
 ```

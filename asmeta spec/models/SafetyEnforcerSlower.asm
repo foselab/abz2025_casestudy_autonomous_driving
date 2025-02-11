@@ -55,21 +55,20 @@ definitions:
 	
 	// Keep the same action decided by the agent - no risk of collision	
 	macro rule r_Hold = 
-		if (actual_distance>(dRSS+l_vehicle)) then 
+		if (actual_distance>dRSS) then 
 			outAction := inputAction
 		endif
 	
 	// Distance from front vehicle lower than safe distance: break
 	macro rule r_unsafeDistance = 
-		if (actual_distance<=(dRSS+l_vehicle)) then 
+		if (actual_distance<=dRSS) then 
 			outAction := SLOWER
 		endif
 	
-	LTLSPEC g((actual_distance<=(dRSS + l_vehicle)) implies x(outAction=SLOWER))
-	LTLSPEC g((actual_distance>(dRSS + l_vehicle)) implies x(outAction=currentAgentAction))
+	LTLSPEC g((actual_distance<=dRSS) implies x(outAction=SLOWER))
+	LTLSPEC g((actual_distance>dRSS) implies x(outAction=currentAgentAction))
 	
-			
-			
+
 	main rule r_Main =
 		par
 			currentAgentAction := inputAction
