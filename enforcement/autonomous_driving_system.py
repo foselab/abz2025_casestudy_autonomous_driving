@@ -111,21 +111,6 @@ def run(model_path, env, enforcer:Enforcer, model_uploader:ModelUploader, test_r
                         if enforced_action != None: 
                             action = REVERSED_ACTIONS[enforced_action]
                             enforcer_interventions += 1
-
-                    '''
-                    logger.error(f"set inputAction := {action_descritpion};")
-                    logger.error(f"set x_front := {x_front};")
-                    logger.error(f"set x_self := {x_self};")
-                    logger.error(f"set v_front := {v_front};")
-                    logger.error(f"set v_self := {v_self};")
-                    logger.error(f"set right_lane_free := {right_lane_free};")
-                    logger.error(f"step")
-                    logger.error(f"check currentAgentAction = {action_descritpion};")
-                    logger.error(f"check outAction = {enforced_action};")
-                    logger.error(f"check dRSS_contr = {dRSS};")
-                    logger.error(f"check actual_distance_contr = {actual_distance};")
-                    '''
-                    
                 else:
                     logger.info(f"Action: {action_descritpion}")
 
