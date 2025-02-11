@@ -35,7 +35,7 @@ signature:
 	static v_max: Real // m/s
 	
 	derived dRSS: Real //Safety distance
-	static dRSS_upper_bound: Real 
+	derived dRSS_upper_bound: Real 
 	derived actual_distance: Real //Actual distance between two vehicles considering their length
 	derived current_max_acc: Real //current maximum acceleration
 	
