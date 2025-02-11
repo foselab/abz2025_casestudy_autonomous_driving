@@ -72,6 +72,17 @@ definitions:
 		if (actual_distance>(dRSS*gofast_perc)) then 
 			outAction := FASTER
 		endif
+
+/*	LTLSPEC g((actual_distance<=dRSS) implies x(outAction=SLOWER))
+	LTLSPEC g((actual_distance>(dRSS*gofast_perc)) implies x(outAction=FASTER))
+	LTLSPEC g((actual_distance>dRSS and actual_distance<=(dRSS*gofast_perc)) implies x(outAction=currentAgentAction))
+	
+	
+	--INVARSPEC properties
+INVARSPEC NAME invar_01 := (actual_distance<=dRSS) -> next(outAction=SLOWER)
+INVARSPEC NAME invar_02 := (actual_distance>(dRSS*gofast_perc)) -> next(outAction=FASTER)
+INVARSPEC NAME invar_03 := (actual_distance>dRSS and actual_distance<=(dRSS*gofast_perc)) -> next(outAction=currentAgentAction)
+	*/
 		
 	main rule r_Main =
 		par

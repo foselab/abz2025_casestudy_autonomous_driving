@@ -16,8 +16,7 @@ signature:
 	monitored x_front: Real //Absolute position of the front vehicle
 	
 	monitored rightLaneFree: Boolean //no cars in the right lane within 200 meters - perception distance
-	
-	//monitored le osservazioni per le regole di enforcement? 
+
 	
 	out outAction: Actions
 	out currentAgentAction: Actions
@@ -82,6 +81,13 @@ definitions:
 		 if (rightLaneFree) then
 		 	outAction := LANE_RIGHT
 		 endif
+	
+/*	LTLSPEC g(rightLaneFree implies x(outAction=LANE_RIGHT))
+
+	--INVARSPEC properties
+INVARSPEC NAME invar_01 := (rightLaneFree) -> next(outAction=LANE_RIGHT)
+*/
+	
 		
 	main rule r_Main =
 		par

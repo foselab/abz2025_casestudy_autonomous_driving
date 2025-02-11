@@ -78,10 +78,12 @@ definitions:
 			outAction := SLOWER
 		endif
 
-	LTLSPEC g((v_self<=v_max and v_front>0.0) implies dRSS_upper_bound>dRSS)
+/*
+LTLSPEC g((v_self<=v_max and v_front>0.0) implies dRSS_upper_bound>dRSS)
+--INVARSPEC properties
+INVARSPEC NAME invar_01 := (((v_self <= v_max) & (v_front > 0.0) & (v_self > 0.0)) -> (dRSS_upper_bound > dRSS));
+*/	
 	
-	//actual_distance < dRSS and v_self < -5 implies dRSS_upper_bound>dRSS
-		
 	main rule r_Main =
 		par
 			currentAgentAction := inputAction

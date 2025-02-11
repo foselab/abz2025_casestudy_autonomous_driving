@@ -65,9 +65,13 @@ definitions:
 			outAction := SLOWER
 		endif
 	
-	LTLSPEC g((actual_distance<=dRSS) implies x(outAction=SLOWER))
+/*	LTLSPEC g((actual_distance<=dRSS) implies x(outAction=SLOWER))
 	LTLSPEC g((actual_distance>dRSS) implies x(outAction=currentAgentAction))
 	
+	--INVARSPEC properties
+INVARSPEC NAME invar_01 := (actual_distance<=dRSS) -> next(outAction=SLOWER)
+INVARSPEC NAME invar_02 := (actual_distance>dRSS) -> next(outAction=currentAgentAction)
+	*/
 
 	main rule r_Main =
 		par
