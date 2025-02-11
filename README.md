@@ -66,7 +66,7 @@ For example, assuming a local server is running the AsmetaS@run.time simulator o
     "target_folder": "log"},
   "experiments": {
     "write_to_xlsx": true,
-    "folder": "data/"
+    "target_folder": "data/"
   }
 }
 ```
