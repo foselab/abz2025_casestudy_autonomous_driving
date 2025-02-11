@@ -37,7 +37,6 @@ class ObservationProcessor:
         """
         features = obs_config.features
         features_range = obs_config.features_range
-        print(features_range)
         df = pd.DataFrame(normalized_observation, columns=features)
         # Denormalize each feature
         for feature, f_range in features_range.items():

@@ -125,6 +125,7 @@ def run(model_path, env, enforcer:Enforcer, model_uploader:ModelUploader, test_r
                     logger.error(f"check dRSS_contr = {dRSS};")
                     logger.error(f"check actual_distance_contr = {actual_distance};")
                     '''
+                    
                 else:
                     logger.info(f"Action: {action_descritpion}")
 
@@ -232,7 +233,7 @@ if __name__ == '__main__':
     model_path = os.path.join("..", folder, "new", "trained_model")
 
     # Configura the Environment (HighwayEnv)
-    env = config_manager.configure_env()
+    env = config_manager.configure_env(run_enforcer)
 
     # Run the tests
     test_runs = config_manager.get_test_runs()
@@ -240,7 +241,12 @@ if __name__ == '__main__':
         port, asm_path, asm_file_name = config_manager.get_enforcer_params()
         enforcer = Enforcer(port, asm_file_name)
         model_uploader = ModelUploader(port, asm_path, asm_file_name)
-        run(model_path, env, enforcer, model_uploader, test_runs, data_exporter if write_to_xlsx else None)
+        try:
+            run(model_path, env, enforcer, model_uploader, test_runs, data_exporter if write_to_xlsx else None)
+        except Exception as e:
+            # Try to run the tests again without enforcement if at a certain point the server is down  
+            logger.error("Failed to connect to the server - Executing the test runs WITHOUT the Enforcer")
+            run(model_path, env, None, None, test_runs, data_exporter if write_to_xlsx else None)
     else:
         run(model_path, env, None, None, test_runs, data_exporter if write_to_xlsx else None)
 

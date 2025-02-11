@@ -1,4 +1,5 @@
 import json
+import pygame
 import gymnasium as gym
 
 import logging_manager
@@ -9,7 +10,7 @@ class ConfigurationManager:
         with open(config_file) as json_file:
             self.json_data = json.load(json_file)
 
-    def configure_env(self):
+    def configure_env(self, run_enforcer):
         """
         Configure and return an HighwayEnv Environment
         """
@@ -35,6 +36,8 @@ class ConfigurationManager:
             if not self.json_data["single_lane"]: # 3 lanes base
                 env.configure({"right_lane_reward": 0.1})
         env.reset()
+        caption = "Highway-env - " + ("with" if run_enforcer else "without") + " Enforcer"
+        pygame.display.set_caption(caption)
         return env
     
     def get_policy_frequency(self):
@@ -70,7 +73,7 @@ class ConfigurationManager:
         return self.json_data["experiments"]["write_to_xlsx"]
     
     def get_experiments_folder(self):
-        return self.json_data["experiments"]["folder"]
+        return self.json_data["experiments"]["target_folder"]
     
     def log_configuration(self):
         self.logger.info("Configuration: ")
