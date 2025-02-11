@@ -15,6 +15,6 @@
     "target_folder": "log"},
   "experiments": {
     "write_to_xlsx": true,
-    "folder": "data/temp"
+    "target_folder": "data/temp"
   }
 }
