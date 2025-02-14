@@ -223,14 +223,16 @@ if __name__ == '__main__':
     # Run the tests
     test_runs = config_manager.get_test_runs()
     if (run_enforcer):
-        port, asm_path, asm_file_name = config_manager.get_enforcer_params()
-        enforcer = Enforcer(port, asm_file_name)
-        model_uploader = ModelUploader(port, asm_path, asm_file_name)
+        ip, port, asm_path, asm_file_name = config_manager.get_enforcer_params()
+        enforcer = Enforcer(ip, port, asm_file_name)
+        model_uploader = ModelUploader(ip, port, asm_path, asm_file_name)
         try:
             run(model_path, env, enforcer, model_uploader, test_runs, data_exporter if write_to_xlsx else None)
         except Exception as e:
+            import pygame
+            pygame.display.set_caption("Highway-env - without Enforcer")
             # Try to run the tests again without enforcement if at a certain point the server is down  
-            logger.error("Failed to connect to the server - Executing the test runs WITHOUT the Enforcer")
+            logger.error("Failed to connect to the server - Executing the test runs WITHOUT the Enforcer")            
             run(model_path, env, None, None, test_runs, data_exporter if write_to_xlsx else None)
     else:
         run(model_path, env, None, None, test_runs, data_exporter if write_to_xlsx else None)

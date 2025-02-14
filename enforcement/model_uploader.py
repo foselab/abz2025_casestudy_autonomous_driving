@@ -4,11 +4,11 @@ import logging_manager
 from rest_client import RestClient
 
 class ModelUploader(RestClient):
-    def __init__(self, base_port, asm_base_path, asm_name):
+    def __init__(self, ip, base_port, asm_base_path, asm_name):
         """
         Initialize the ModelUploader class.
         """
-        super().__init__(base_port)
+        super().__init__(ip, base_port)
         self.logger = logging_manager.get_logger(__name__)
         self.asm_name = asm_name
         self.stdl_name = "StandardLibrary.asm"
@@ -55,6 +55,8 @@ class ModelUploader(RestClient):
             self.logger.info(f"Model deleted: {self.asm_name}")    
             response = self._send_request("GET", "model-list")       
             libraries = response.json().get("libraries")
+            if self.stdl_name in libraries:
+                self._send_request("DELETE", "delete-library", params={"name": self.stdl_name})
             if self.ltl_name in libraries:
                 self._send_request("DELETE", "delete-library", params={"name": self.ltl_name})
         except Exception as e:

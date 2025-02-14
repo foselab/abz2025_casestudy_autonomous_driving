@@ -5,19 +5,21 @@ import subprocess
 import logging_manager
 
 class RestClient:
-    def __init__(self, base_port):
+    def __init__(self, ip, base_port):
         """
         Initialize the rest client class and determine the local domain.
         """
         self.logger = logging_manager.get_logger(__name__)
         self.base_port = base_port
-        self.api_base_url = self._resolve_api_endpoint()
+        self.api_base_url = self._resolve_api_endpoint(ip)
 
 
-    def _resolve_api_endpoint(self):
+    def _resolve_api_endpoint(self, ip):
         """
-        Determine the local domain dynamically, especially for WSL environments.
+        Determine the local domain dynamically, especially for WSL environments, or use the input ip parameter if it is not None.
         """
+        if ip is not None:
+            return f"http://{ip}:{self.base_port}/"
         if "WSL_INTEROP" in os.environ:
             try:
                 result = subprocess.run(

@@ -63,7 +63,7 @@ class ConfigurationManager:
     
     def get_enforcer_params(self):
         enf_param = self.json_data["enforcer"]
-        return enf_param["base_port"], enf_param["spec_path"], enf_param["runtime_model"]
+        return enf_param.get("ip", None), enf_param["base_port"], enf_param["spec_path"], enf_param["runtime_model"]
 
     def get_logging_params(self):
         log_param = self.json_data["logging"]

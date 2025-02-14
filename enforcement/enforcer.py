@@ -5,11 +5,11 @@ import logging_manager
 from rest_client import RestClient
 
 class Enforcer(RestClient):    
-    def __init__(self, base_port, asm_name):
+    def __init__(self, ip, base_port, asm_name):
         """
         Initialize the Enforcer class.
         """
-        super().__init__(base_port)
+        super().__init__(ip, base_port)
         self.logger = logging_manager.get_logger(__name__)
         self.asm_name = asm_name
         self.exec_id = None
