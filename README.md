@@ -1,4 +1,7 @@
-# ABZ 2025 Case Study
+# ABZ 2025 Case Study: Replication Package for Safety enforcement for autonomous driving on a simulated highway using Asmeta models@run.time
+
+This repository contains the replication package for the paper "Safety enforcement for autonomous driving on a simulated highway using Asmeta models@run.time" for the Case Study "Safety Controller for Autonomous Driving" of ABZ conference 2025.
+The replication package includes the Python scripts, models and data leading us to our findings.
 
 ## Initial setup
 
