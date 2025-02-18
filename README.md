@@ -1,6 +1,6 @@
-# ABZ 2025 Case Study - replication Package for: Safety enforcement for autonomous driving on a simulated highway using `Asmeta models@run.time`
+# ABZ 2025 Case Study - replication Package for: `Safety enforcement for autonomous driving on a simulated highway using Asmeta models@run.time`
 
-This repository contains the replication package for the paper "Safety enforcement for autonomous driving on a simulated highway using `Asmeta models@run.time` for the Case Study "Safety Controller for Autonomous Driving" of ABZ conference 2025.
+This repository contains the replication package for the paper `Safety enforcement for autonomous driving on a simulated highway using Asmeta models@run.time` for the Case Study [Safety Controller for Autonomous Driving](https://abz-conf.org/case-study/abz25/) of [ABZ conference 2025](https://abz-conf.org/2025/).
 The replication package includes the Python software artifacts for the enforcement framework, the Asmeta models, and data leading us to our findings.
 
 ## Initial setup
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ## Running tests using the Enforcement Framework
 
-### Start the Asmeta@run.time server on port 8080
+### Start the `Asmeta@run.time` server on port 8080
 Move to the `asmeta server` folder and run:
 
 ```bash
@@ -50,7 +50,7 @@ python autonomous_driving_system.py run_enforcer
 
 Whether running with or without enforcement, the configuration of the environment, the controlled vehicle, and other simulation-related parameters can be modified by editing the `enforcement/config.json` file.
 
-For example, assuming a local server is running the AsmetaS@run.time simulator on `localhost:8080`, the following configuration sets up 1 test run lasting 100 simulation seconds in a multi-lane scenario with an adversarial agent and the `SafetyEnforcerKeepRight.asm` as runtime model:
+For example, assuming a local server is running the `AsmetaS@run.time` simulator on `localhost:8080`, the following configuration sets up 1 test run lasting 100 simulation seconds in a multi-lane scenario with an adversarial agent and the `SafetyEnforcerKeepRight.asm` as runtime model:
 
 ```json
 {
