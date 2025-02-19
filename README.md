@@ -88,7 +88,7 @@ For example, assuming a local server is running the `AsmetaS@run.time` simulator
     "test_runs": 1,
     "simulation_frequency": 15,
     "policy_frequency": 1,
-    "duration": 50},
+    "duration": 100},
   "enforcer":{
     "ip": "localhost",
     "base_port": 8080,
